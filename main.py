@@ -97,7 +97,7 @@ class MyGame(arcade.Window):
 
 
         # Adding walls
-        for chunk in range(0,SCREEN_WIDTH+10,10): #wall is 50x50 1/5 = 0.2 
+        for chunk in range(0,SCREEN_WIDTH+200,10): #wall is 50x50 1/5 = 0.2 
             wall =  arcade.Sprite("assets/test_invisible_wall.png",0.2) #file location , Sprite Scaling (1 = 100%)
             wall.center_x=chunk
             wall.center_y=0
@@ -257,6 +257,7 @@ class MyGame(arcade.Window):
 
 
         for meteor in self.scene["Meteors"]:
+           
             if(self.coinBoost):meteor.change_y = -PlayerSpeed * 5
             else:meteor.change_y = -PlayerSpeed * 2
         # for coin in self.scene["Coins"]:
@@ -330,6 +331,7 @@ class MyGame(arcade.Window):
                 coin=arcade.Sprite("assets/coin.png",0.1)
                 coin.center_x=randomNumber # will need to add some randomness here
                 coin.center_y=SCREEN_HEIGHT
+                coin.change_angle=random.randrange(-2,2)
                 self.scene.add_sprite("Coins",coin)
 
                 for coin in self.scene["Coins"]:
@@ -347,6 +349,7 @@ class MyGame(arcade.Window):
                 
                 
                 def meteorSpawn(): 
+                    randomRadial=random.randrange(-5,5)
                     randomNumber=random.randrange(10,790)
 
                     meteorSpawnNum = random.randrange(3)
@@ -355,21 +358,28 @@ class MyGame(arcade.Window):
                         meteor=arcade.Sprite("assets/meteorite01.png",0.1)
                         meteor.center_x=randomNumber+random.randrange(-200,200) # will need to add some randomness here
                         meteor.center_y=SCREEN_HEIGHT+random.randrange(20,500)
+                        meteor.change_angle=randomRadial
                         self.scene.add_sprite("Meteors",meteor)
                     elif(meteorSpawnNum==2):
                         meteor2=arcade.Sprite("assets/meteorite02.png",0.1)
                         meteor2.center_x=randomNumber+random.randrange(-200,200) # will need to add some randomness here
                         meteor2.center_y=SCREEN_HEIGHT+random.randrange(20,500)
+                        meteor2.change_angle=randomRadial
+
                         self.scene.add_sprite("Meteors",meteor2)
                     else:
                         meteor=arcade.Sprite("assets/meteorite01.png",0.1)
                         meteor.center_x=randomNumber+random.randrange(-200,200) # will need to add some randomness here
                         meteor.center_y=SCREEN_HEIGHT+random.randrange(20,500)
+                        meteor.change_angle=randomRadial
+
                         self.scene.add_sprite("Meteors",meteor)
 
                         meteor2=arcade.Sprite("assets/meteorite02.png",0.1)
                         meteor2.center_x=randomNumber+random.randrange(-200,200) # will need to add some randomness here
                         meteor2.center_y=SCREEN_HEIGHT+random.randrange(20,500)
+                        meteor2.change_angle=randomRadial
+
                         self.scene.add_sprite("Meteors",meteor2)
 
                 #if difficulty hard
