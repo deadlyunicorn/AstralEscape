@@ -15,7 +15,7 @@ for file in glob.glob("assets/spacecraft_frames/*.png"):
     frame = arcade.load_texture(file)
     frames.append(frame)
 
-print (frames)
+
 
 
 class MyGame(arcade.Window):
@@ -69,6 +69,8 @@ class MyGame(arcade.Window):
 
         self.frameIndex=0
         
+        self.background = None
+        self.backgroundMove=0
 
 
     def setup(self): 
@@ -144,6 +146,8 @@ class MyGame(arcade.Window):
         self.meteor_engines=[]
         self.existingCoinList=[]
 
+        self.background=arcade.load_texture("assets/space.png")
+
 
 
         
@@ -154,6 +158,9 @@ class MyGame(arcade.Window):
 
         self.clear()
         self.shapes.draw()
+        arcade.draw_lrwh_rectangle_textured(0, -self.backgroundMove,
+                                            SCREEN_WIDTH, 4000,
+                                            self.background)
 
         frame=frames[self.frameIndex]
         frame.draw_sized(self.player_sprite.center_x, self.player_sprite.center_y, frame.width*0.1, frame.height*0.1)
@@ -162,6 +169,10 @@ class MyGame(arcade.Window):
 
 
         self.scene.draw()
+
+        #background
+        
+
         
 
     def updatePlayerSpeed(self):
@@ -242,6 +253,11 @@ class MyGame(arcade.Window):
 
         for coin_engine in self.coin_engines:
             coin_engine.update()
+
+        if(self.backgroundMove<3200-20): ##For a smoother change
+            self.backgroundMove+=5
+        else:
+            self.backgroundMove=0
 
         
 
