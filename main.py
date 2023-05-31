@@ -18,16 +18,17 @@ for file in glob.glob("assets/spacecraft_frames/*.png"):
 
 
 
-class MyGame(arcade.Window):
+class mainGameView(arcade.View):
 
     def __init__(self): 
 
-        super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+        super().__init__()
 
         arcade.set_background_color(arcade.csscolor.BLACK)
 
 
         self.shapes = arcade.ShapeElementList()
+        self.window.set_mouse_visible(False)
 
         color1 = (188, 155, 189)
         color2 = (165, 205, 212)
@@ -255,7 +256,10 @@ class MyGame(arcade.Window):
             coin_engine.update()
 
         if(self.backgroundMove<3200-20): ##For a smoother change
-            self.backgroundMove+=5
+            if(self.coinBoost):
+                self.backgroundMove+=12
+            else:
+                self.backgroundMove+=5
         else:
             self.backgroundMove=0
 
@@ -450,15 +454,21 @@ class MyGame(arcade.Window):
             
 
 
-    
+
+
 
           
 
 def main():
 
-    window = MyGame()
 
-    window.setup()
+
+    window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+    
+    startingView=mainGameView()
+
+    window.show_view(startingView)
+    startingView.setup()
 
     arcade.run()
 
