@@ -454,6 +454,56 @@ class mainGameView(arcade.View):
             
 
 
+class mainMenu(arcade.View):
+
+    def __init__(self): 
+
+        super().__init__()
+
+        
+
+        self.scene = None
+        
+        self.background = arcade.load_texture("assets/space.png")
+        self.frameTrack=0
+        self.frameIndex=0
+
+    
+    def setup(self): 
+        
+        
+        
+        pass
+
+    
+    def on_draw(self):
+
+
+
+        self.clear()
+
+        arcade.draw_lrwh_rectangle_textured(0, 0,
+                                            SCREEN_WIDTH, 4000,
+                                            self.background)
+
+
+        frame=frames[self.frameIndex]
+        frame.draw_sized(600, 400, frame.width*0.8, frame.height*0.8)
+
+
+
+
+    def on_update(self,delta_time):
+
+
+        self.frameTrack=self.frameTrack+1
+
+        if (self.frameTrack%20==0):
+            if (self.frameIndex==1):
+                self.frameIndex=0
+            else:
+                self.frameIndex=1
+
 
 
 
@@ -465,9 +515,10 @@ def main():
 
     window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
     
-    startingView=mainGameView()
+    startingView=mainMenu()
+    # gameView=mainGameView()
 
-    window.show_view(startingView)
+    window.show_view(mainMenu())
     startingView.setup()
 
     arcade.run()
