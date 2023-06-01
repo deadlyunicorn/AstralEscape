@@ -1,4 +1,5 @@
 import arcade
+import arcade.gui
 import glob
 import random
 
@@ -15,7 +16,7 @@ for file in glob.glob("assets/spacecraft_frames/*.png"):
     frame = arcade.load_texture(file)
     frames.append(frame)
 
-
+difficulty=1
 
 
 class mainGameView(arcade.View):
@@ -259,7 +260,7 @@ class mainGameView(arcade.View):
             if(self.coinBoost):
                 self.backgroundMove+=12
             else:
-                self.backgroundMove+=5
+                self.backgroundMove+=1
         else:
             self.backgroundMove=0
 
@@ -403,22 +404,19 @@ class mainGameView(arcade.View):
                         self.scene.add_sprite("Meteors",meteor2)
 
                 #if difficulty hard
-                meteorSpawn()
-                meteorSpawn()
-                meteorSpawn()
-                meteorSpawn()
-                meteorSpawn()
-                meteorSpawn()
-
-                #if difficulty normal
-
-                # meteorSpawn()
-                # meteorSpawn()
-                # meteorSpawn()
-
-                #if difficulty easy
-
-                # meteorSpawn()
+                if (difficulty==3):
+                    meteorSpawn()
+                    meteorSpawn()
+                    meteorSpawn()
+                    meteorSpawn()
+                    meteorSpawn()
+                    meteorSpawn()
+                elif difficulty==2:
+                    meteorSpawn()
+                    meteorSpawn()
+                    meteorSpawn()
+                elif difficulty==1:
+                    meteorSpawn()
                 
                 
 
@@ -468,6 +466,97 @@ class mainMenu(arcade.View):
         self.frameTrack=0
         self.frameIndex=0
 
+        self.logo = arcade.load_texture("assets/logo.png")
+
+        ## Needed for the buttons
+        self.manager = arcade.gui.UIManager()
+        self.manager.enable()
+
+
+        self.difficultyBox = arcade.gui.UIBoxLayout(vertical=False)
+
+        easyButton = arcade.gui.UIFlatButton(text="Easy", width=100)
+        self.difficultyBox.add(easyButton.with_space_around(right=20))
+        mediumButton = arcade.gui.UIFlatButton(text="Medium", width=100)
+        self.difficultyBox.add(mediumButton.with_space_around(right=20))
+        hardButton = arcade.gui.UIFlatButton(text="Hard", width=100)
+        self.difficultyBox.add(hardButton.with_space_around(right=20))
+
+
+
+
+
+        self.v_box = arcade.gui.UIBoxLayout()
+
+
+        playButton = arcade.gui.UIFlatButton(text="Start Game", width=200)
+        self.v_box.add(playButton.with_space_around(bottom=20))
+
+        scoreButton = arcade.gui.UIFlatButton(text="Score", width=200)
+        self.v_box.add(scoreButton.with_space_around(bottom=20))
+
+        creditsButton = arcade.gui.UIFlatButton(text="Credits", width=200)
+        self.v_box.add(creditsButton.with_space_around(bottom=20))
+
+        exitButton = arcade.gui.UIFlatButton(text="Exit", width=200)
+        self.v_box.add(exitButton.with_space_around(bottom=20))
+        
+        
+        @playButton.event("on_click")
+        def on_click_settings(event):
+            gameView=mainGameView()
+            gameView.setup()
+            self.window.show_view(gameView)
+
+        @creditsButton.event("on_click")
+        def on_click_settings(event):
+            currentView=creditsMenu()
+            currentView.setup()
+            self.window.show_view(currentView)
+
+        @exitButton.event("on_click")
+        def on_click_settings(event):
+            arcade.exit()
+
+  
+        
+        @easyButton.event("on_click")
+        def on_click_settings(event):
+            global difficulty
+            difficulty=1
+        @mediumButton.event("on_click")
+        def on_click_settings(event):
+            global difficulty
+            difficulty=2
+        @hardButton.event("on_click")
+        def on_click_settings(event):
+            global difficulty
+            difficulty=3
+
+
+        # Create a widget to hold the v_box widget, that will center the buttons
+        self.manager.add(
+            arcade.gui.UIAnchorWidget(
+                align_x= 150,
+                align_y= 0,
+                anchor_x="left",
+                anchor_y="center_y",
+                child=self.v_box),
+        )
+
+        self.manager.add(
+            arcade.gui.UIAnchorWidget(
+                align_x= 70,
+                align_y= 50,
+                anchor_x="left",
+                anchor_y="bottom",
+                child=self.difficultyBox),
+        )
+
+
+
+
+
     
     def setup(self): 
         
@@ -488,7 +577,35 @@ class mainMenu(arcade.View):
 
 
         frame=frames[self.frameIndex]
-        frame.draw_sized(600, 400, frame.width*0.8, frame.height*0.8)
+        frame.draw_sized(600, 350, frame.width*0.8, frame.height*0.8)
+
+        arcade.draw_lrwh_rectangle_textured(0,0,800,800,self.logo)
+
+        arcade.draw_text(text="Difficulty",start_x=180,start_y=140,font_size=24,align="left",width=400)
+
+        if difficulty==1:
+            arcade.draw_text(text="l",start_x=120,start_y=108,font_size=24,align="left",width=400,color=(45,45,200))
+            arcade.draw_text(text="v",start_x=118,start_y=106,font_size=19,align="left",width=400,color=(90,90,200))
+        elif difficulty==2:
+            arcade.draw_text(text="l",start_x=240,start_y=108,font_size=24,align="left",width=400,color=(45,45,200))
+            arcade.draw_text(text="v",start_x=238,start_y=106,font_size=19,align="left",width=400,color=(90,90,200))
+
+        elif difficulty==3:
+            arcade.draw_text(text="l",start_x=360,start_y=108,font_size=24,align="left",width=400,color=(45,45,200))
+            arcade.draw_text(text="v",start_x=358,start_y=106,font_size=19,align="left",width=400,color=(90,90,200))
+
+        ## Button
+
+        self.manager.draw()
+        
+
+
+        
+    # def on_mouse_press(self, _x, _y, _button, _modifiers):
+    #     gameView=mainGameView()
+    #     gameView.setup()
+    #     self.window.show_view(gameView)
+
 
 
 
@@ -508,6 +625,100 @@ class mainMenu(arcade.View):
 
 
           
+class creditsMenu(arcade.View):
+
+    def __init__(self): 
+
+        super().__init__()
+        
+
+        self.scene = None
+        
+        self.background = arcade.load_texture("assets/space.png")
+
+        self.logo = arcade.load_texture("assets/logo.png")
+
+        ## Needed for the buttons
+        self.manager = arcade.gui.UIManager()
+        self.manager.enable()
+        
+
+
+        self.v_box = arcade.gui.UIBoxLayout()
+
+
+        homeButton = arcade.gui.UIFlatButton(text="Go Back", width=200)
+        self.v_box.add(homeButton.with_space_around(bottom=20))
+
+        
+
+        @homeButton.event("on_click")
+        def on_click_settings(event):
+            currentView=mainMenu()
+            currentView.setup()
+            self.window.show_view(currentView)
+
+
+        # Create a widget to hold the v_box widget, that will center the buttons
+        self.manager.add(
+            arcade.gui.UIAnchorWidget(
+                align_y= 20,
+                anchor_x="center_x",
+                anchor_y="bottom",
+                child=self.v_box),
+        )
+
+
+
+
+
+    def setup(self): 
+        
+        pass
+
+    
+    def on_draw(self):
+
+
+
+        self.clear()
+
+
+        arcade.draw_lrwh_rectangle_textured(0, 0,
+                                            SCREEN_WIDTH, 4000,
+                                            self.background)
+
+
+        arcade.draw_rectangle_filled(400,400,800,800,(0,0,50,150))
+
+
+        arcade.draw_lrwh_rectangle_textured(150,0,800,800,self.logo)
+
+
+
+        arcade.draw_text(text="This game was built by Alexandrer Petrache and Nikolaos Filopoulos",start_x=50,start_y=550,font_size=16,align="center",width=700)
+        arcade.draw_text(text="During their 2nd Semester at the Vocational Institute of Peristeri",start_x=50,start_y=520,font_size=16,align="center",width=700)
+        arcade.draw_text(text="As a project on the course 'Practical Application' ",start_x=50,start_y=490,font_size=16,align="center",width=700)
+        arcade.draw_text(text="We built this using the Python and the library 'Arcade'.",start_x=50,start_y=460,font_size=16,align="center",width=700)
+        
+        arcade.draw_text(text="Time: Spring 2023",start_x=50,start_y=430,font_size=16,align="center",width=700)
+        arcade.draw_text(text="All assets were handmade by us",start_x=50,start_y=400,font_size=16,align="center",width=700)
+        arcade.draw_text(text="So don't use them without our written permission.",start_x=50,start_y=370,font_size=16,align="center",width=700)
+
+
+        arcade.draw_text(text="Feel free to reach out to us for any questions,",start_x=50,start_y=170,font_size=16,align="center",width=700)
+        arcade.draw_text(text="Regarding this project.",start_x=50,start_y=140,font_size=16,align="center",width=700)
+        arcade.draw_text(text="We hope you enjoy the game!",start_x=50,start_y=110,font_size=16,align="center",width=700)
+
+        ## Button
+
+        self.manager.draw()
+
+
+        
+
+
+   
 
 def main():
 
