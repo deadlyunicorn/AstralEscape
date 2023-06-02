@@ -74,6 +74,8 @@ class mainGameView(arcade.View):
         self.background = None
         self.backgroundMove=0
 
+        self.animationBoost = 10
+
 
     def setup(self): 
         
@@ -166,6 +168,11 @@ class mainGameView(arcade.View):
 
         frame=frames[self.frameIndex]
         frame.draw_sized(self.player_sprite.center_x, self.player_sprite.center_y, frame.width*0.1, frame.height*0.1)
+
+        arcade.draw_text(("Score is: "+str(self.score)),0,750,font_size=14,align="center",width=800)
+
+        arcade.draw_text(("x"+str(self.PlayerHP)),-20,750,font_size=14,align="right",width=800,font_name="calibri")
+
 
         
 
@@ -284,7 +291,7 @@ class mainGameView(arcade.View):
         # for coin in self.scene["Coins"]:
         #     coin.change_y = -PlayerSpeed
 
-        self.score=self.score+0.01
+        
 
         meteorDamage = arcade.check_for_collision_with_list(
             self.player_sprite, self.scene["Meteors"]
@@ -302,7 +309,9 @@ class mainGameView(arcade.View):
 
         for coin in coinCatch:
             coin.remove_from_sprite_lists()
-            self.score=self.score+20
+
+            
+            
             self.coinBoost=True
 
 
@@ -326,7 +335,13 @@ class mainGameView(arcade.View):
 
         self.frameTrack=self.frameTrack+1
 
-        if (self.frameTrack%10==0):
+        if (self.coinBoost):
+            self.animationBoost=5
+        else:
+            self.animationBoost=10
+
+
+        if (self.frameTrack%self.animationBoost==0):
             if (self.frameIndex==1):
                 self.frameIndex=0
             else:
@@ -334,6 +349,11 @@ class mainGameView(arcade.View):
 
 
         seconds=int(self.frameTrack/60)
+
+        if (self.coinBoost and self.frameTrack%6==0):
+            self.score=self.score+1
+        elif(self.frameTrack%30==0):
+            self.score=self.score+1
 
         if self.coinBoost == False:
             self.coinSec = seconds
@@ -343,16 +363,23 @@ class mainGameView(arcade.View):
             if (self.timeTrack==self.coinSec+2):
                 self.coinBoost = False
 
+                
+
             
 
             self.timeTrack=seconds
             if (self.timeTrack%5==0):
                 randomNumber=random.randrange(10,790)
 
+                coinScale=random.randrange(100,110)/1000
+                if (difficulty==3):
+                    coinScale=random.randrange(60,110)/1000
+
                 coin=arcade.Sprite("assets/coin.png",0.1)
                 coin.center_x=randomNumber # will need to add some randomness here
                 coin.center_y=SCREEN_HEIGHT
                 coin.change_angle=random.randrange(-2,2)
+                coin.scale=coinScale
                 self.scene.add_sprite("Coins",coin)
 
                 for coin in self.scene["Coins"]:
@@ -372,6 +399,7 @@ class mainGameView(arcade.View):
                 def meteorSpawn(): 
                     randomRadial=random.randrange(-5,5)
                     randomNumber=random.randrange(10,790)
+                    randomScale=random.randrange(100,110)/1000
 
                     meteorSpawnNum = random.randrange(3)
 
@@ -380,12 +408,15 @@ class mainGameView(arcade.View):
                         meteor.center_x=randomNumber+random.randrange(-200,200) # will need to add some randomness here
                         meteor.center_y=SCREEN_HEIGHT+random.randrange(20,500)
                         meteor.change_angle=randomRadial
+                        meteor.scale=randomScale
                         self.scene.add_sprite("Meteors",meteor)
                     elif(meteorSpawnNum==2):
                         meteor2=arcade.Sprite("assets/meteorite02.png",0.1)
                         meteor2.center_x=randomNumber+random.randrange(-200,200) # will need to add some randomness here
                         meteor2.center_y=SCREEN_HEIGHT+random.randrange(20,500)
                         meteor2.change_angle=randomRadial
+                        meteor2.scale=randomScale
+
 
                         self.scene.add_sprite("Meteors",meteor2)
                     else:
@@ -393,6 +424,8 @@ class mainGameView(arcade.View):
                         meteor.center_x=randomNumber+random.randrange(-200,200) # will need to add some randomness here
                         meteor.center_y=SCREEN_HEIGHT+random.randrange(20,500)
                         meteor.change_angle=randomRadial
+                        meteor.scale=randomScale
+
 
                         self.scene.add_sprite("Meteors",meteor)
 
@@ -400,6 +433,8 @@ class mainGameView(arcade.View):
                         meteor2.center_x=randomNumber+random.randrange(-200,200) # will need to add some randomness here
                         meteor2.center_y=SCREEN_HEIGHT+random.randrange(20,500)
                         meteor2.change_angle=randomRadial
+                        meteor2.scale=randomScale
+
 
                         self.scene.add_sprite("Meteors",meteor2)
 
@@ -584,15 +619,15 @@ class mainMenu(arcade.View):
         arcade.draw_text(text="Difficulty",start_x=180,start_y=140,font_size=24,align="left",width=400)
 
         if difficulty==1:
-            arcade.draw_text(text="l",start_x=120,start_y=108,font_size=24,align="left",width=400,color=(45,45,200))
-            arcade.draw_text(text="v",start_x=118,start_y=106,font_size=19,align="left",width=400,color=(90,90,200))
+            arcade.draw_text(text="l",start_x=120,start_y=108,font_size=24,align="left",width=400,color=(90,90,250))
+            arcade.draw_text(text="v",start_x=118,start_y=106,font_size=19,align="left",width=400,color=(90,90,250))
         elif difficulty==2:
-            arcade.draw_text(text="l",start_x=240,start_y=108,font_size=24,align="left",width=400,color=(45,45,200))
-            arcade.draw_text(text="v",start_x=238,start_y=106,font_size=19,align="left",width=400,color=(90,90,200))
+            arcade.draw_text(text="l",start_x=240,start_y=108,font_size=24,align="left",width=400,color=(90,90,250))
+            arcade.draw_text(text="v",start_x=238,start_y=106,font_size=19,align="left",width=400,color=(90,90,250))
 
         elif difficulty==3:
-            arcade.draw_text(text="l",start_x=360,start_y=108,font_size=24,align="left",width=400,color=(45,45,200))
-            arcade.draw_text(text="v",start_x=358,start_y=106,font_size=19,align="left",width=400,color=(90,90,200))
+            arcade.draw_text(text="l",start_x=360,start_y=108,font_size=24,align="left",width=400,color=(90,90,250))
+            arcade.draw_text(text="v",start_x=358,start_y=106,font_size=19,align="left",width=400,color=(90,90,250))
 
         ## Button
 
