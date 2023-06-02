@@ -2,6 +2,7 @@ import arcade
 import arcade.gui
 import glob
 import random
+from datetime import date
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 800
@@ -332,7 +333,26 @@ class mainGameView(arcade.View):
               coin.remove_from_sprite_lists()
 
         if self.PlayerHP<=0:
-          arcade.get_window().close()#make it to go to game over screen when ==0
+            scoreFile=open("AstralEscapeScore.txt","a")
+
+            scoreFile.write("\nSTART----------\n\n")
+            scoreFile.write("Difficulty: ")
+            if difficulty==1:
+                scoreFile.write("EASY\n")
+            elif difficulty==2:
+              scoreFile.write("NORMAL\n")
+            elif difficulty==3:
+              scoreFile.write("HARD\n")
+                
+            scoreFile.write("Score: "+str(self.score)+"\n")
+            scoreFile.write("Date: "+str(date.today())+"\n")
+            scoreFile.write("\nEND------------\n")
+
+            mainMenuView = mainMenu()
+            mainMenuView.setup()
+            self.window.show_view(mainMenuView)
+
+
 
         self.frameTrack=self.frameTrack+1
 
@@ -735,6 +755,9 @@ class creditsMenu(arcade.View):
         ## Button
 
         self.manager.draw()
+
+
+
 
 
         
