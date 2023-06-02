@@ -338,14 +338,14 @@ class mainGameView(arcade.View):
             scoreFile.write("\nSTART----------\n\n")
             scoreFile.write("Difficulty: ")
             if difficulty==1:
-                scoreFile.write("EASY\n")
+                scoreFile.write("EASY;\n")
             elif difficulty==2:
-              scoreFile.write("NORMAL\n")
+              scoreFile.write("NORMAL;\n")
             elif difficulty==3:
-              scoreFile.write("HARD\n")
+              scoreFile.write("HARD;\n")
                 
-            scoreFile.write("Score: "+str(self.score)+"\n")
-            scoreFile.write("Date: "+str(date.today())+"\n")
+            scoreFile.write("Score: "+str(self.score)+";\n")
+            scoreFile.write("Date: "+str(date.today())+";\n")
             scoreFile.write("\nEND------------\n")
 
             mainMenuView = mainMenu()
@@ -550,6 +550,12 @@ class mainMenu(arcade.View):
             gameView.setup()
             self.window.show_view(gameView)
 
+        @scoreButton.event("on_click")
+        def on_click_settings(event):
+            currentView=scoreMenu()
+            currentView.setup()
+            self.window.show_view(currentView)
+
         @creditsButton.event("on_click")
         def on_click_settings(event):
             currentView=creditsMenu()
@@ -704,7 +710,7 @@ class creditsMenu(arcade.View):
         # Create a widget to hold the v_box widget, that will center the buttons
         self.manager.add(
             arcade.gui.UIAnchorWidget(
-                align_y= 20,
+                align_y= -5,
                 anchor_x="center_x",
                 anchor_y="bottom",
                 child=self.v_box),
@@ -760,10 +766,246 @@ class creditsMenu(arcade.View):
 
 
 
+class scoreMenu(arcade.View):
+
+    def __init__(self): 
+
+        super().__init__()
+        
+
+        self.scene = None
+
+        self.currentDifficulty=1
+        self.background = arcade.load_texture("assets/space.png")
+
+        
+        self.entryFound=False
+        self.registeredDifficulty=None
+
+        
+
+    def setup(self): 
+
+
+        ## Needed for the buttons
+        self.manager = arcade.gui.UIManager()
+        self.manager.enable()
+
+        self.v_box = arcade.gui.UIBoxLayout()
+
+        homeButton = arcade.gui.UIFlatButton(text="Go Back", width=200)
+        self.v_box.add(homeButton.with_space_around(bottom=20))
+
+        @homeButton.event("on_click")
+        def on_click_settings(event):
+            currentView=mainMenu()
+            currentView.setup()
+            self.window.show_view(currentView)
+
+        self.manager.add(
+            arcade.gui.UIAnchorWidget(
+                align_y= -5,
+                anchor_x="center_x",
+                anchor_y="bottom",
+                child=self.v_box),
+        )
+
+        self.difficultyBox = arcade.gui.UIBoxLayout(vertical=False)
+        
+        easyButton = arcade.gui.UIFlatButton(text="Easy", width=200)
+        self.difficultyBox.add(easyButton.with_space_around(right=20))
+
+        @easyButton.event("on_click")
+        def on_click_settings(event):
+            self.currentDifficulty=1
+
+        mediumButton = arcade.gui.UIFlatButton(text="Medium", width=200)
+        self.difficultyBox.add(mediumButton.with_space_around(right=20))
+
+        @mediumButton.event("on_click")
+        def on_click_settings(event):
+            self.currentDifficulty=2
+
+        hardButton = arcade.gui.UIFlatButton(text="Hard", width=200)
+        self.difficultyBox.add(hardButton.with_space_around(right=20))
+
+        @hardButton.event("on_click")
+        def on_click_settings(event):
+            self.currentDifficulty=3
+
+        self.manager.add(
+            arcade.gui.UIAnchorWidget(
+                align_y= 120,
+                anchor_x="center_x",
+                anchor_y="bottom",
+                child=self.difficultyBox),
+        )
+
         
 
 
+        with open("AstralEscapeScore.txt") as file:
+
+            easy=[]
+            normal=[]
+            hard=[] 
+  
+            self.registeredScore=None
+            self.registeredDate=None
+
+
+            for line in file:
+
+                if self.entryFound:
+                    if line.find("Difficulty:")!=-1:
+                        diffFinIndex=len("Difficulty:")
+                        endLineIndex=line.find(";")
+                        self.registeredDifficulty=line[diffFinIndex:endLineIndex]
+                    elif line.find("Score:")!=-1:
+                        scoreFinIndex=len("Score:")
+                        endLineIndex=line.find(";")
+                        self.registeredScore=line[scoreFinIndex:endLineIndex]
+                    elif line.find("Date:")!=-1:
+                        dateFinIndex=len("Date:")
+                        endLineIndex=line.find(";")
+                        self.registeredDate=line[dateFinIndex:endLineIndex]
+                    elif line.find("END")!=-1:
+                        
+                        self.entryFound=False
+                        
+                        if self.registeredDifficulty.strip()=="EASY":
+                            easy.append(Score(self.registeredDifficulty,int(self.registeredScore),self.registeredDate))
+                        elif self.registeredDifficulty.strip()=="NORMAL":
+                            normal.append(Score(self.registeredDifficulty,int(self.registeredScore),self.registeredDate))
+                        elif self.registeredDifficulty.strip()=="HARD":
+                            hard.append(Score(self.registeredDifficulty,int(self.registeredScore),self.registeredDate))
+                            ##Using int in order to work during sort()
+                            
+
+                elif line.find("START"):
+                        self.entryFound=True
+
+
+            self.easy_sorted=sorted(easy,key=lambda x:x.score,reverse=True)
+            self.normal_sorted=sorted(normal,key=lambda x:x.score,reverse=True)
+            self.hard_sorted=sorted(hard,key=lambda x:x.score,reverse=True)
+                
+                
+                    
    
+        
+        pass
+
+    
+    def on_draw(self):
+
+
+        self.clear()
+        print("End reading")
+
+
+        arcade.draw_lrwh_rectangle_textured(0, 0,
+                                            SCREEN_WIDTH, 4000,
+                                            self.background)
+
+
+        arcade.draw_rectangle_filled(400,400,800,800,(0,0,50,150))
+
+
+
+
+        arcade.draw_text(text="Showing for difficulty: ",start_x=0,start_y=85,font_size=16,align="center",width=700)
+        ## Button
+
+        self.manager.draw()
+
+        if self.currentDifficulty==1:
+            arcade.draw_text(text="Easy",start_x=480,start_y=85,font_size=16)
+
+            
+        elif self.currentDifficulty==2:
+            arcade.draw_text(text="Medium",start_x=480,start_y=85,font_size=16)
+        elif self.currentDifficulty==3:
+            arcade.draw_text(text="Hard",start_x=480,start_y=85,font_size=16)
+
+        if self.registeredDifficulty!=None:
+
+            if self.currentDifficulty==1:
+                
+                if (len(self.easy_sorted)>0):
+                    arcade.draw_text(text="RANK",start_x=70,start_y=710,font_size=32)
+                    arcade.draw_text(text="SCORE",start_x=70+260,start_y=710,font_size=32)
+                    arcade.draw_text(text="DATE",start_x=70+520,start_y=710,font_size=32)
+
+                    for x in range(10):
+                        if(x>=len(self.easy_sorted)):
+                            break
+                        
+                        arcade.draw_rectangle_filled(400,660-x*50,700,40,(50,0,120,150))
+                        arcade.draw_text(text="#"+str(x+1),start_x=100,start_y=650-x*50,font_size=19)
+                        print(self.easy_sorted[x].score)
+                        arcade.draw_text(text=str(self.easy_sorted[x].score),align="right",start_x=220,start_y=650-x*50,font_size=19,width=200)
+                        arcade.draw_text(text=str(self.easy_sorted[x].date),start_x=570,start_y=650-x*50,font_size=19)
+                else:
+                    arcade.draw_text(text="No entries found",start_x=50,start_y=700,font_size=16,align="center",width=700)
+
+
+            elif self.currentDifficulty==2:
+
+                if (len(self.normal_sorted)>0):
+                    arcade.draw_text(text="RANK",start_x=70,start_y=710,font_size=32)
+                    arcade.draw_text(text="SCORE",start_x=70+260,start_y=710,font_size=32)
+                    arcade.draw_text(text="DATE",start_x=70+520,start_y=710,font_size=32)
+
+                    for x in range(10):
+                        if(x>=len(self.normal_sorted)):
+                            break
+                        
+                        arcade.draw_rectangle_filled(400,660-x*50,700,40,(50,0,120,150))
+                        arcade.draw_text(text="#"+str(x+1),start_x=100,start_y=650-x*50,font_size=19)
+                        print(self.normal_sorted[x].score)
+                        arcade.draw_text(text=str(self.normal_sorted[x].score),align="right",start_x=220,start_y=650-x*50,font_size=19,width=200)
+                        arcade.draw_text(text=str(self.normal_sorted[x].date),start_x=570,start_y=650-x*50,font_size=19)
+                else:
+                    arcade.draw_text(text="No entries found",start_x=50,start_y=700,font_size=16,align="center",width=700)
+
+
+
+
+            elif self.currentDifficulty==3:
+
+                if (len(self.hard_sorted)>0):
+                    arcade.draw_text(text="RANK",start_x=70,start_y=710,font_size=32)
+                    arcade.draw_text(text="SCORE",start_x=70+260,start_y=710,font_size=32)
+                    arcade.draw_text(text="DATE",start_x=70+520,start_y=710,font_size=32)
+
+                    for x in range(10):
+                        if(x>=len(self.hard_sorted)):
+                            break
+                        
+                        arcade.draw_rectangle_filled(400,660-x*50,700,40,(50,0,120,150))
+                        arcade.draw_text(text="#"+str(x+1),start_x=100,start_y=650-x*50,font_size=19)
+                        print(self.hard_sorted[x].score)
+                        arcade.draw_text(text=str(self.hard_sorted[x].score),align="right",start_x=220,start_y=650-x*50,font_size=19,width=200)
+                        arcade.draw_text(text=str(self.hard_sorted[x].date),start_x=570,start_y=650-x*50,font_size=19)
+                else:
+                    arcade.draw_text(text="No entries found",start_x=50,start_y=700,font_size=16,align="center",width=700)
+
+        
+        else:
+            arcade.draw_text(text="No entries found",start_x=50,start_y=700,font_size=16,align="center",width=700)
+
+
+
+        
+
+class Score:
+    def __init__(self,difficulty,score,date):
+        self.difficulty=difficulty
+        self.score=score
+        self.date=date
+
+
 
 def main():
 
