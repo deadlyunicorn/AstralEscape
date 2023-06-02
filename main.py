@@ -152,6 +152,7 @@ class mainGameView(arcade.View):
 
         self.background=arcade.load_texture("assets/space.png")
 
+        self.heartTexture=arcade.load_texture("assets/heart.png")
 
 
         
@@ -171,8 +172,9 @@ class mainGameView(arcade.View):
 
         arcade.draw_text(("Score is: "+str(self.score)),0,750,font_size=14,align="center",width=800)
 
-        arcade.draw_text(("x"+str(self.PlayerHP)),-20,750,font_size=14,align="right",width=800,font_name="calibri")
 
+        arcade.draw_lrwh_rectangle_textured(800-69,748,20,18,self.heartTexture)
+        arcade.draw_text(("x"+str(self.PlayerHP)),-20,750,font_size=14,align="right",width=800,font_name="calibri")
 
         
 
@@ -300,7 +302,6 @@ class mainGameView(arcade.View):
         for meteor in meteorDamage:
             meteor.remove_from_sprite_lists()
             self.PlayerHP = self.PlayerHP - 1
-            print(self.PlayerHP)
 
 
         coinCatch = arcade.check_for_collision_with_list(
@@ -470,20 +471,6 @@ class mainGameView(arcade.View):
                         self.existingMeteorList.append(meteor)
 
                 
-
-        
-        
-
-        
-
-
-
-        
-
-        
-           
-            
-        # print (self.score)
             
 
 
