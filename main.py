@@ -630,9 +630,9 @@ class mainMenu(arcade.View):
 
 
         frame=frames[self.frameIndex]
-        frame.draw_sized(600, 350, frame.width*0.8, frame.height*0.8)
+        frame.draw_sized(630, 380, frame.width*0.8, frame.height*0.8)
 
-        arcade.draw_lrwh_rectangle_textured(0,0,800,800,self.logo)
+        arcade.draw_lrwh_rectangle_textured(0,20,800,800,self.logo)
 
         arcade.draw_text(text="Difficulty",start_x=180,start_y=140,font_size=24,align="left",width=400)
 
@@ -650,6 +650,10 @@ class mainMenu(arcade.View):
         ## Button
 
         self.manager.draw()
+
+        arcade.draw_text(text="MOVE: Arrow keys or WASD",start_x=550,start_y=24,font_size=12)
+        arcade.draw_text(text="BOOST: SHIFT key",start_x=550,start_y=5,font_size=12)
+
         
 
 
@@ -760,8 +764,9 @@ class creditsMenu(arcade.View):
 
 
         arcade.draw_text(text="Feel free to reach out to us for any questions,",start_x=50,start_y=170,font_size=16,align="center",width=700)
-        arcade.draw_text(text="Regarding this project.",start_x=50,start_y=140,font_size=16,align="center",width=700)
-        arcade.draw_text(text="We hope you enjoy the game!",start_x=50,start_y=110,font_size=16,align="center",width=700)
+        arcade.draw_text(text="Regarding this project",start_x=50,start_y=140,font_size=16,align="center",width=700)
+        arcade.draw_text(text="At hello@deadlyunicorn.dev",start_x=50,start_y=110,font_size=16,align="center",width=700)
+        arcade.draw_text(text="We hope you enjoy the game!",start_x=50,start_y=80,font_size=16,align="center",width=700)
 
         ## Button
 
