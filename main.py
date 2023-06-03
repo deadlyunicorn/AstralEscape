@@ -12,10 +12,19 @@ wallHeight = (SCREEN_HEIGHT/2)+200
 PlayerSpeed = 3
 ShiftSpeed = PlayerSpeed * 3
 
+playerCount=1
+
 frames = []
-for file in glob.glob("assets/spacecraft_frames/*.png"):
+frames2 = []
+
+for file in glob.glob("assets/spacecraft_frames/*1.png"):
     frame = arcade.load_texture(file)
     frames.append(frame)
+
+for file in glob.glob("assets/spacecraft_frames/*2.png"):
+    frame = arcade.load_texture(file)
+    frames2.append(frame)
+
 
 difficulty=1
 
@@ -26,28 +35,14 @@ class mainGameView(arcade.View):
 
         super().__init__()
 
-        arcade.set_background_color(arcade.csscolor.BLACK)
-
-
-        self.shapes = arcade.ShapeElementList()
         self.window.set_mouse_visible(False)
         self.paused = False
 
-        color1 = (188, 155, 189)
-        color2 = (165, 205, 212)
-
-        points = (0, 0), (SCREEN_WIDTH, 0), (SCREEN_WIDTH, SCREEN_HEIGHT), (0, SCREEN_HEIGHT)
-
-        colors = (color1, color2, color2, color2)
-
-        rect = arcade.create_rectangle_filled_with_colors(points, colors)
-
-        self.shapes.append(rect)
-
-
         self.scene = None
 
+
         self.physics_engine = None
+        self.physics2_engine = None
         self.coin_engine = None
         self.meteor_engine = None
 
@@ -58,25 +53,45 @@ class mainGameView(arcade.View):
 
         self.shift_pressed = False
 
+        self.left_pressed2 = False
+        self.right_pressed2 = False
+        self.up_pressed2 = False
+        self.down_pressed2 = False
+
+        self.shift_pressed2 = False
+
+
         self.PlayerHP = 5
+        self.PlayerHP2 = 5
 
-        self.score = 0
+
+        self.score1 = 0
+        self.score2 = 0
         
-
         self.frameTrack = 0
         self.timeTrack = 0
+        self.frameIndex=0 #used for animation
 
         self.coinBoost = False
+        self.coinBoost2 = False
         self.coinSec = 0
+
+        self.playerLastAlive=0 #seconds
+        self.playerLastAlive2=0
 
         self.existingMeteorList = []
 
-        self.frameIndex=0
         
         self.background = None
         self.backgroundMove=0
 
-        self.animationBoost = 10
+        self.animationBoost = 10 #lower values -> faster animation
+
+        self.meteorDestroy=[]
+        self.coinDestroy=[]
+
+        self.playerCount=playerCount
+        
 
 
     def setup(self): 
@@ -85,6 +100,7 @@ class mainGameView(arcade.View):
         self.scene = arcade.Scene()
 
         self.scene.add_sprite_list("Rocket")
+
         self.scene.add_sprite_list("Walls")
         self.scene.add_sprite_list("OuterWalls")
 
@@ -96,19 +112,27 @@ class mainGameView(arcade.View):
         self.meteor_list = arcade.SpriteList(); 
 
 
-        self.player_sprite = arcade.Sprite("assets/spacecraft_a_2.png",0.1) #file location , Sprite Scaling (1 = 100%)
-        self.player_sprite.center_x=400
-        self.player_sprite.center_y=400
+        self.player_sprite1 = arcade.Sprite("assets/spacecraft_a_2.png",0.1) #file location , Sprite Scaling (1 = 100%)
+        self.player_sprite1.center_x=400
+        self.player_sprite1.center_y=400
+        self.scene.add_sprite("Rocket",self.player_sprite1)
 
 
-        self.scene.add_sprite("Rocket",self.player_sprite)
+        if(self.playerCount==2):
+            self.player_sprite2 = arcade.Sprite("assets/spacecraft_a_2.png",0.1) #file location , Sprite Scaling (1 = 100%)
+            self.player_sprite2.center_x=400
+            self.player_sprite2.center_y=400
+            self.scene.add_sprite("Rocket",self.player_sprite2)
+
+
+
 
 
         # Adding walls
-        for chunk in range(0,SCREEN_WIDTH+200,10): #wall is 50x50 1/5 = 0.2 
+        for chunk in range(-200,SCREEN_WIDTH+200,10): #wall is 50x50 1/5 = 0.2 
             wall =  arcade.Sprite("assets/invisible_wall.png",0.2) #file location , Sprite Scaling (1 = 100%)
             wall.center_x=chunk
-            wall.center_y=0
+            wall.center_y=-70
             self.scene.add_sprite("OuterWalls",wall)
 
         for chunk in range(0,SCREEN_WIDTH+10,10): #wall is 50x50 1/5 = 0.2 
@@ -138,7 +162,12 @@ class mainGameView(arcade.View):
 
 
         self.physics_engine = arcade.PhysicsEngineSimple(
-            self.player_sprite, self.scene["Walls"]
+            self.player_sprite1, self.scene["Walls"]
+        )
+
+        if playerCount==2:
+            self.physics_engine2 = arcade.PhysicsEngineSimple(
+            self.player_sprite2, self.scene["Walls"]
         )
 
         self.coin_engines=[]
@@ -155,6 +184,7 @@ class mainGameView(arcade.View):
         self.background=arcade.load_texture("assets/space.png")
 
         self.heartTexture=arcade.load_texture("assets/heart.png")
+        self.heartTexture2=arcade.load_texture("assets/heart2.png")
 
 
         
@@ -165,19 +195,88 @@ class mainGameView(arcade.View):
 
         
         self.clear()
-        self.shapes.draw()
+        
         arcade.draw_lrwh_rectangle_textured(0, -self.backgroundMove,
                                             SCREEN_WIDTH, 4000,
                                             self.background)
+        
+        
 
-        frame=frames[self.frameIndex]
-        frame.draw_sized(self.player_sprite.center_x, self.player_sprite.center_y, frame.width*0.1, frame.height*0.1)
+        #player 1
+        if self.PlayerHP>0:
 
-        arcade.draw_text(("Score is: "+str(self.score)),0,750,font_size=14,align="center",width=800)
+            #draw animation over sprite
+            frame=frames[self.frameIndex]
+            frame.draw_sized(self.player_sprite1.center_x, self.player_sprite1.center_y, frame.width*0.1, frame.height*0.1)
+            
+            #score update for player 1
+            if(self.frameTrack%30==0):
+                self.score1=self.score1+1
+                if(self.shift_pressed and (self.up_pressed or self.left_pressed or self.down_pressed or self.right_pressed )):
+                    self.score1=self.score1+1
+
+            #score update for player 1 when boosted
+
+            if (self.coinBoost and self.frameTrack%6==0):
+                self.score1=self.score1+1
+        
+        #6+ seconds after death
+        elif(self.playerLastAlive+5<self.frameTrack/60):
+            self.player_sprite1.center_x=self.player_sprite2.center_x
+            self.player_sprite1.center_y=self.player_sprite2.center_y-100
+            
+
+        #recent death < 6sec
+        else:
+            frame=arcade.load_texture("assets/spacecraft_destroyed.png")
+            frame.draw_sized(self.player_sprite1.center_x, self.player_sprite1.center_y, frame.width*0.2, frame.height*0.2,alpha=255-(2.45*(self.frameTrack-self.playerLastAlive*60)/3))
+            self.player_sprite1.alpha=0
+
+
+            
+        if playerCount==2:
+
+            if self.PlayerHP2>0:
+
+                frame2=frames2[self.frameIndex]
+                frame2.draw_sized(self.player_sprite2.center_x, self.player_sprite2.center_y, frame2.width*0.1, frame2.height*0.1)
+                
+                if (self.coinBoost2 and self.frameTrack%6==0):
+                    self.score2=self.score2+1
+
+                if(self.frameTrack%30==0):
+                    self.score2=self.score2+1
+                    if(self.shift_pressed2 and ( self.up_pressed2 or self.left_pressed2 or self.down_pressed2 or self.right_pressed2 )):
+                        self.score2=self.score2+1
+            
+            elif(self.playerLastAlive2+5<self.frameTrack/60):
+                self.player_sprite2.texture= arcade.load_texture("assets/invisible_wall.png")
+                self.player_sprite2.center_x=self.player_sprite1.center_x
+                self.player_sprite2.center_y=self.player_sprite1.center_y-100
+            else:
+                frame2=arcade.load_texture("assets/spacecraft_destroyed.png")
+                frame2.draw_sized(self.player_sprite2.center_x, self.player_sprite2.center_y, frame2.width*0.2, frame2.height*0.2,alpha=255-(2.45*(self.frameTrack-self.playerLastAlive2*60)/3))
+                self.player_sprite2.alpha=0
+                
+                # self.player_sprite2.texture= arcade.Texture(arcade.load_texture("assets/invisible_wall.png"))
+
+        
+        if playerCount==2:
+            arcade.draw_text(("Player 1: "+str(self.score1)),0,750,font_size=14,align="center",width=800)
+            arcade.draw_text(("Player 2: "+str(self.score2)),0,730,font_size=14,align="center",width=800)
+        else:
+            arcade.draw_text(("Score is: "+str(self.score1)),0,750,font_size=14,align="center",width=800)
+
 
 
         arcade.draw_lrwh_rectangle_textured(800-69,748,20,18,self.heartTexture)
         arcade.draw_text(("x"+str(self.PlayerHP)),-20,750,font_size=14,align="right",width=800,font_name="calibri")
+
+        if playerCount==2:
+            arcade.draw_lrwh_rectangle_textured(800-69,728,20,18,self.heartTexture2)
+            arcade.draw_text(("x"+str(self.PlayerHP2)),-20,730,font_size=14,align="right",width=800,font_name="calibri")
+
+
 
         
 
@@ -191,79 +290,174 @@ class mainGameView(arcade.View):
 
     def updatePlayerSpeed(self):
         
-        self.player_sprite.change_x = 0
-        self.player_sprite.change_y = 0
+        self.player_sprite1.change_x = 0
+        self.player_sprite1.change_y = 0
 
-        if self.up_pressed and not self.down_pressed:
-            if self.shift_pressed:
-                self.player_sprite.change_y = ShiftSpeed
-            else:
-                self.player_sprite.change_y = PlayerSpeed
-        elif self.down_pressed and not self.up_pressed:
+        if playerCount==2:
+            self.player_sprite2.change_x = 0
+            self.player_sprite2.change_y = 0
 
-            if self.shift_pressed:
-                self.player_sprite.change_y = -ShiftSpeed
-            else:
-                self.player_sprite.change_y = -PlayerSpeed
+        if self.PlayerHP>0:
+        
+            if self.up_pressed and not self.down_pressed:
+                if self.shift_pressed:
+                    self.player_sprite1.change_y = ShiftSpeed
+                else:
+                    self.player_sprite1.change_y = PlayerSpeed
+            elif self.down_pressed and not self.up_pressed:
+
+                if self.shift_pressed:
+                    self.player_sprite1.change_y = -ShiftSpeed
+                else:
+                    self.player_sprite1.change_y = -PlayerSpeed
+                
+
+
+            if self.left_pressed and not self.right_pressed:
+
+                if self.shift_pressed:
+                    self.player_sprite1.change_x = -ShiftSpeed
+                else:
+                    self.player_sprite1.change_x = -PlayerSpeed 
+                
+            elif self.right_pressed and not self.left_pressed:
+                if self.shift_pressed:
+                    self.player_sprite1.change_x = ShiftSpeed
+                else:
+                    self.player_sprite1.change_x = PlayerSpeed
+
+        if playerCount==2:
             
+            if self.PlayerHP==0:
+                self.player_sprite1.change_y = -1
+            if self.PlayerHP2==0:
+                self.player_sprite2.change_y = -1
 
 
-        if self.left_pressed and not self.right_pressed:
+            if self.PlayerHP2>0:
+                if self.up_pressed2 and not self.down_pressed2:
+                    if self.shift_pressed2:
+                        self.player_sprite2.change_y = ShiftSpeed
+                    else:
+                        self.player_sprite2.change_y = PlayerSpeed
+                elif self.down_pressed2 and not self.up_pressed2:
 
-            if self.shift_pressed:
-                self.player_sprite.change_x = -ShiftSpeed
-            else:
-                self.player_sprite.change_x = -PlayerSpeed 
-            
-        elif self.right_pressed and not self.left_pressed:
-            if self.shift_pressed:
-                self.player_sprite.change_x = ShiftSpeed
-            else:
-                self.player_sprite.change_x = PlayerSpeed 
+                    if self.shift_pressed2:
+                        self.player_sprite2.change_y = -ShiftSpeed
+                    else:
+                        self.player_sprite2.change_y = -PlayerSpeed
+
+                if self.left_pressed2 and not self.right_pressed2:
+
+                    if self.shift_pressed2:
+                        self.player_sprite2.change_x = -ShiftSpeed
+                    else:
+                        self.player_sprite2.change_x = -PlayerSpeed 
+                    
+                elif self.right_pressed2 and not self.left_pressed2:
+                    if self.shift_pressed2:
+                        self.player_sprite2.change_x = ShiftSpeed
+                    else:
+                        self.player_sprite2.change_x = PlayerSpeed
             
       
         
 
-
     def on_key_press(self, key, modifiers):
-        if key == arcade.key.LEFT or key == arcade.key.A:
-            self.left_pressed = True
-            self.updatePlayerSpeed()
-        elif key == arcade.key.RIGHT or key == arcade.key.D:
-            self.right_pressed = True
-            self.updatePlayerSpeed()
-        elif key == arcade.key.UP or key == arcade.key.W: #We need to set max height a player can move
-            self.up_pressed = True
-            self.updatePlayerSpeed()
-        elif key == arcade.key.DOWN or key == arcade.key.S:
-            self.down_pressed = True
-            self.updatePlayerSpeed()
-        if key == arcade.key.LSHIFT or key == arcade.key.RSHIFT:
-            self.shift_pressed = True
-            self.updatePlayerSpeed()
+
+        if (self.playerCount==1):
+            if key == arcade.key.LEFT or key == arcade.key.A:
+                self.left_pressed = True
+            elif key == arcade.key.RIGHT or key == arcade.key.D:
+                self.right_pressed = True
+            elif key == arcade.key.UP or key == arcade.key.W: #We need to set max height a player can move
+                self.up_pressed = True
+            elif key == arcade.key.DOWN or key == arcade.key.S:
+                self.down_pressed = True
+            if key == arcade.key.LSHIFT or key == arcade.key.RSHIFT:
+                self.shift_pressed = True
+
+        elif (self.playerCount==2):
+
+            if key == arcade.key.LEFT:
+                self.left_pressed = True
+                
+            elif key == arcade.key.RIGHT:
+                self.right_pressed = True
+
+            elif key == arcade.key.UP:
+                self.up_pressed = True
+
+            elif key == arcade.key.DOWN:
+                self.down_pressed = True
+
+            if key == arcade.key.RSHIFT:
+                self.shift_pressed = True
+
+
+            if key == arcade.key.A:
+                self.left_pressed2 = True
+
+            elif key == arcade.key.D:
+                self.right_pressed2 = True
+
+            elif key == arcade.key.W: 
+                self.up_pressed2 = True
+            elif key == arcade.key.S:
+                self.down_pressed2 = True
+
+            if key == arcade.key.LSHIFT:
+                self.shift_pressed2 = True
+
+        self.updatePlayerSpeed()
+
         if key == arcade.key.ESCAPE:
-            # pass self, the current view, to preserve this view's state
             self.paused=not self.paused
-            # self.window.show_view(pause)
-        #elif key == arcade.key.SPACE: # spacebeam
-            #   
+            
+
 
     def on_key_release(self, key, modifiers):
-        if key == arcade.key.LEFT or key == arcade.key.A:
-            self.left_pressed = False
-            self.updatePlayerSpeed()
-        elif key == arcade.key.RIGHT or key == arcade.key.D:
-            self.right_pressed = False
-            self.updatePlayerSpeed()
-        elif key == arcade.key.UP or key == arcade.key.W: #We need to set max height a player can move
-            self.up_pressed = False
-            self.updatePlayerSpeed()
-        elif key == arcade.key.DOWN or key == arcade.key.S:
-            self.down_pressed = False
-            self.updatePlayerSpeed()
-        if key == arcade.key.LSHIFT or key == arcade.key.RSHIFT:
-            self.shift_pressed = False
-            self.updatePlayerSpeed()
+        if (self.playerCount==1):
+
+            if key == arcade.key.LEFT or key == arcade.key.A:
+                self.left_pressed = False
+            elif key == arcade.key.RIGHT or key == arcade.key.D:
+                self.right_pressed = False
+            elif key == arcade.key.UP or key == arcade.key.W: #We need to set max height a player can move
+                self.up_pressed = False
+            elif key == arcade.key.DOWN or key == arcade.key.S:
+                self.down_pressed = False
+            if key == arcade.key.LSHIFT or key == arcade.key.RSHIFT:
+                self.shift_pressed = False
+
+        elif (self.playerCount==2):
+            
+            if key == arcade.key.LEFT:
+                self.left_pressed = False
+            elif key == arcade.key.RIGHT:
+                self.right_pressed = False
+            elif key == arcade.key.UP: #We need to set max height a player can move
+                self.up_pressed = False
+            elif key == arcade.key.DOWN:
+                self.down_pressed = False
+
+            if key == arcade.key.RSHIFT:
+                self.shift_pressed = False
+
+            if key == arcade.key.A:
+                self.left_pressed2 = False
+            elif key == arcade.key.D:
+                self.right_pressed2 = False
+            elif key == arcade.key.W: #We need to set max height a player can move
+                self.up_pressed2 = False
+            elif key == arcade.key.S:
+                self.down_pressed2 = False
+
+            if key == arcade.key.LSHIFT:
+                self.shift_pressed2 = False
+        self.updatePlayerSpeed()
+        
+        
 
        
 
@@ -271,13 +465,16 @@ class mainGameView(arcade.View):
         ## movement and game logic in here
 
         if not self.paused:
-            self.physics_engine.update()
+
+            seconds=int(self.frameTrack/60)
+
+            
 
             for coin_engine in self.coin_engines:
                 coin_engine.update()
 
             if(self.backgroundMove<3200-20): ##For a smoother change
-                if(self.coinBoost):
+                if(self.coinBoost or self.coinBoost2):
                     self.backgroundMove+=12
                 else:
                     self.backgroundMove+=1
@@ -294,130 +491,228 @@ class mainGameView(arcade.View):
 
 
             for coin in self.scene["Coins"]:
-                coin.change_y = -PlayerSpeed *2
+                    coin.change_y = -PlayerSpeed * 2 * self.coinSpeedVarience
 
 
             for meteor in self.scene["Meteors"]:
             
-                if(self.coinBoost):meteor.change_y = -PlayerSpeed * 5
+                if(self.coinBoost or self.coinBoost2):meteor.change_y = -PlayerSpeed * 5
                 else:meteor.change_y = -PlayerSpeed * 2
-            # for coin in self.scene["Coins"]:
-            #     coin.change_y = -PlayerSpeed
-
             
 
             meteorDamage = arcade.check_for_collision_with_list(
-                self.player_sprite, self.scene["Meteors"]
+                self.player_sprite1, self.scene["Meteors"]
             )
-
             for meteor in meteorDamage:
                 meteor.remove_from_sprite_lists()
-                self.PlayerHP = self.PlayerHP - 1
+                if self.PlayerHP>0: 
+                    self.PlayerHP = self.PlayerHP - 1
+
+            if playerCount==2:
+                meteorDamage2 = arcade.check_for_collision_with_list(
+                    self.player_sprite2, self.scene["Meteors"]
+                )
+                for meteor in meteorDamage2:
+                    meteor.remove_from_sprite_lists()
+                    if self.PlayerHP2>0: 
+                        self.PlayerHP2 = self.PlayerHP2 - 1
+
+            
 
 
             coinCatch = arcade.check_for_collision_with_list(
-                self.player_sprite, self.scene["Coins"]
+                self.player_sprite1, self.scene["Coins"]
             )
-
             for coin in coinCatch:
                 coin.remove_from_sprite_lists()
-
-                
-                
                 self.coinBoost=True
+
+            if playerCount==2:
+                coinCatch2 = arcade.check_for_collision_with_list(
+                    self.player_sprite2, self.scene["Coins"]
+                )
+                for coin in coinCatch2:
+                    coin.remove_from_sprite_lists()
+                    self.coinBoost2=True
 
 
             for chunk in self.scene["OuterWalls"]:
-                meteorDestroy = arcade.check_for_collision_with_list(
-                chunk, self.scene["Meteors"]
-            )
-            for meteor in meteorDestroy:
-                
+                self.meteorDestroy = self.meteorDestroy+arcade.check_for_collision_with_list(
+                    chunk, self.scene["Meteors"]
+                )
+
+            for meteor in self.meteorDestroy:
                 meteor.remove_from_sprite_lists()
 
             for chunk in self.scene["OuterWalls"]:
-                coinDestroy = arcade.check_for_collision_with_list(
-                chunk, self.scene["Coins"]
-            )
-            for coin in coinDestroy:
+                self.coinDestroy = self.coinDestroy + arcade.check_for_collision_with_list(
+                    chunk, self.scene["Coins"]
+                )
+
+            for coin in self.coinDestroy:
                 coin.remove_from_sprite_lists()
 
-            if self.PlayerHP<=0:
+
+            #Game Over
 
 
-                mainMenuView = gameOverMenu(self.score)
-                mainMenuView.setup()
-                self.window.show_view(mainMenuView)
+            if playerCount==1:
 
+                self.physics_engine.update()
+                
+                if self.PlayerHP<=0:
+                    gameOverView = gameOverMenu(self.score1,self.score2)
+                    gameOverView.setup()
+                    self.window.show_view(gameOverView)
 
-                scoreFile=open("AstralEscapeScore.txt","a")
+                    #save score to file
+                    scoreFile=open("AstralEscapeScore.txt","a")
 
-                scoreFile.write("\nSTART----------\n\n")
-                scoreFile.write("Difficulty: ")
-                if difficulty==1:
-                    scoreFile.write("EASY;\n")
-                elif difficulty==2:
-                    scoreFile.write("NORMAL;\n")
-                elif difficulty==3:
-                    scoreFile.write("HARD;\n")
-                        
-                    scoreFile.write("Score: "+str(self.score)+";\n")
+                    scoreFile.write("\nSTART----------\n\n")
+                    scoreFile.write("Difficulty: ")
+
+                    if difficulty==1:
+                        scoreFile.write("EASY;\n")
+                    elif difficulty==2:
+                        scoreFile.write("NORMAL;\n")
+                    elif difficulty==3:
+                        scoreFile.write("HARD;\n")
+                            
+                    scoreFile.write("Score: "+str(self.score1)+";\n")
                     scoreFile.write("Date: "+str(date.today())+";\n")
+                    scoreFile.write("\nEND------------\n")
+
+            else:
+
+                if self.PlayerHP>0:
+                    self.playerLastAlive=seconds
+
+                if self.playerLastAlive+10>seconds:
+                    self.physics_engine.update()
+                    
+                elif(self.player_sprite1 in self.player_list): 
+                    self.player_list.remove(self.player_sprite1)
+
+
+
+
+                if self.PlayerHP2>0:
+                    self.playerLastAlive2=seconds
+
+                if self.playerLastAlive2+10>seconds:
+                    self.physics_engine2.update()
+
+                elif(self.player_sprite1 in self.player_list): 
+                    self.player_list.remove(self.player_sprite1)
+
+
+
+
+                if self.PlayerHP<=0 and self.PlayerHP2<=0:
+                    gameOverView = gameOverMenu(self.score1,self.score2)
+                    gameOverView.setup()
+                    self.window.show_view(gameOverView)
+
+                    #save score to file
+                    scoreFile=open("AstralEscapeScore.txt","a")
+
+                    scoreFile.write("\nSTART----------\n\n")
+                    scoreFile.write("Difficulty: ")
+
+                    if difficulty==1:
+                        scoreFile.write("EASY;\n")
+                    elif difficulty==2:
+                        scoreFile.write("NORMAL;\n")
+                    elif difficulty==3:
+                        scoreFile.write("HARD;\n")
+                            
+                    scoreFile.write("Score: "+str(self.score1)+";\n")
+                    scoreFile.write("Date: "+str(date.today())+";\n")
+                    scoreFile.write("\nEND------------\n")
+
+                    scoreFile.write("\nSTART----------\n\n")
+                    scoreFile.write("Difficulty: ")
+
+                    if difficulty==1:
+                        scoreFile.write("EASY;\n")
+                    elif difficulty==2:
+                        scoreFile.write("NORMAL;\n")
+                    elif difficulty==3:
+                        scoreFile.write("HARD;\n")
+                            
+                    scoreFile.write("Score: "+str(self.score2)+";\n")
+                    scoreFile.write("Date: "+str(date.today())+"(P2)"+";\n")
                     scoreFile.write("\nEND------------\n")
 
 
 
+
+
                 
 
 
-
+            #get the frame we are currently at
             self.frameTrack=self.frameTrack+1
 
-            if (self.coinBoost):
+
+            #change spaceship and background animation speed based on coinboost
+            if (self.coinBoost or self.coinBoost2):
                 self.animationBoost=5
             else:
                 self.animationBoost=10
 
 
+            #lower values of animationBoost => faster animation change
+            #frame index is used for the spaceship animation
             if (self.frameTrack%self.animationBoost==0):
                 if (self.frameIndex==1):
                     self.frameIndex=0
                 else:
                     self.frameIndex=1
 
+            #1 second == 60 frames
 
-            seconds=int(self.frameTrack/60)
-
-            if (self.coinBoost and self.frameTrack%6==0):
-                self.score=self.score+1
-            elif(self.frameTrack%30==0):
-                self.score=self.score+1
-
-            if self.coinBoost == False:
-                self.coinSec = seconds
+            #coinBoost won't give instantly +bonus points, but gradually
             
+
+            
+
+
+
+            if self.coinBoost == False and self.coinBoost2 == False:
+                self.coinSec = seconds 
+                #save the moment coinBoost was disabled for the last time
+                #so that it gets disabled again 2 seconds after that time
+            
+
+            #update per second instead of per frame
             if(self.timeTrack!=seconds):
 
+                self.timeTrack=seconds
+                
+                #coinBoost lasts 2 seconds
                 if (self.timeTrack==self.coinSec+2):
                     self.coinBoost = False
+                    self.coinBoost2 = False
 
-                    
-
-                
-
-                self.timeTrack=seconds
+                #every 5 seconds 
                 if (self.timeTrack%5==0):
-                    randomNumber=random.randrange(10,790)
 
+                    XrandomNumber=random.randrange(10,790) #used for x axis
                     coinScale=random.randrange(100,110)/1000
+                    self.coinSpeedVarience=random.randint(50,200) /100
+
+                    #on hard difficulty coin scale can get smaller
                     if (difficulty==3):
                         coinScale=random.randrange(60,110)/1000
 
+
                     coin=arcade.Sprite("assets/coin.png",0.1)
-                    coin.center_x=randomNumber # will need to add some randomness here
+                    coin.center_x=XrandomNumber
                     coin.center_y=SCREEN_HEIGHT
-                    coin.change_angle=random.randrange(-2,2)
+                    coin.change_angle=random.randrange(-2,2) #rotation
                     coin.scale=coinScale
+
                     self.scene.add_sprite("Coins",coin)
 
                     for coin in self.scene["Coins"]:
@@ -428,11 +723,8 @@ class mainGameView(arcade.View):
                             self.coin_engines.append(coin_engine)
                             self.existingCoinList.append(coin)
 
-                elif (self.timeTrack%1==0):
-    ## 50-50 chance for which meteor to generate
-
-
-                    
+                #Spawn meteorites randomly each second
+                if (self.timeTrack%1==0):
                     
                     def meteorSpawn(): 
                         randomRadial=random.randrange(-5,5)
@@ -443,40 +735,36 @@ class mainGameView(arcade.View):
 
                         if(meteorSpawnNum==1):
                             meteor=arcade.Sprite("assets/meteorite01.png",0.1)
-                            meteor.center_x=randomNumber+random.randrange(-200,200) # will need to add some randomness here
+                            meteor.center_x=randomNumber+random.randrange(-200,200) 
                             meteor.center_y=SCREEN_HEIGHT+random.randrange(20,500)
                             meteor.change_angle=randomRadial
                             meteor.scale=randomScale
                             self.scene.add_sprite("Meteors",meteor)
+
                         elif(meteorSpawnNum==2):
                             meteor2=arcade.Sprite("assets/meteorite02.png",0.1)
-                            meteor2.center_x=randomNumber+random.randrange(-200,200) # will need to add some randomness here
+                            meteor2.center_x=randomNumber+random.randrange(-200,200) 
                             meteor2.center_y=SCREEN_HEIGHT+random.randrange(20,500)
                             meteor2.change_angle=randomRadial
                             meteor2.scale=randomScale
-
-
                             self.scene.add_sprite("Meteors",meteor2)
+
                         else:
                             meteor=arcade.Sprite("assets/meteorite01.png",0.1)
-                            meteor.center_x=randomNumber+random.randrange(-200,200) # will need to add some randomness here
+                            meteor.center_x=randomNumber+random.randrange(-200,200) 
                             meteor.center_y=SCREEN_HEIGHT+random.randrange(20,500)
                             meteor.change_angle=randomRadial
                             meteor.scale=randomScale
-
-
                             self.scene.add_sprite("Meteors",meteor)
 
                             meteor2=arcade.Sprite("assets/meteorite02.png",0.1)
-                            meteor2.center_x=randomNumber+random.randrange(-200,200) # will need to add some randomness here
+                            meteor2.center_x=randomNumber+random.randrange(-200,200)
                             meteor2.center_y=SCREEN_HEIGHT+random.randrange(20,500)
                             meteor2.change_angle=randomRadial
                             meteor2.scale=randomScale
-
-
                             self.scene.add_sprite("Meteors",meteor2)
 
-                    #if difficulty hard
+                    #if difficulty == hard
                     if (difficulty==3):
                         meteorSpawn()
                         meteorSpawn()
@@ -490,15 +778,8 @@ class mainGameView(arcade.View):
                         meteorSpawn()
                     elif difficulty==1:
                         meteorSpawn()
-                    
-                    
-
-                    
-
-                    
-                    
-
-                    
+                
+                
                     for meteor in self.scene["Meteors"]:
                         if meteor not in self.existingMeteorList:
                             meteor_engine = arcade.PhysicsEngineSimple(
@@ -533,7 +814,18 @@ class mainMenu(arcade.View):
 
         self.logo = arcade.load_texture("assets/logo.png")
 
+        self.manager=None
+
         ## Needed for the buttons
+       
+
+
+
+
+
+    
+    def setup(self): 
+        
         self.manager = arcade.gui.UIManager()
         self.manager.enable()
 
@@ -623,15 +915,6 @@ class mainMenu(arcade.View):
                 anchor_y="bottom",
                 child=self.difficultyBox),
         )
-
-
-
-
-
-    
-    def setup(self): 
-        
-        
         
         pass
 
@@ -699,13 +982,15 @@ class mainMenu(arcade.View):
 
 
 class gameOverMenu(arcade.View):
-    def __init__(self,score): 
+    def __init__(self,score1,score2): 
 
 
 
         super().__init__()
 
-        self.score=score
+        self.score1=score1
+        self.score2=score2
+
         self.window.set_mouse_visible(True)
         
 
@@ -716,6 +1001,16 @@ class gameOverMenu(arcade.View):
         self.brokenSpaceCraft = arcade.load_texture("assets/spacecraft_destroyed.png")
 
         ## Needed for the buttons
+        self.manager = None
+        
+
+
+
+
+
+
+    
+    def setup(self): 
         self.manager = arcade.gui.UIManager()
         self.manager.enable()
 
@@ -781,12 +1076,6 @@ class gameOverMenu(arcade.View):
                 anchor_y="bottom",
                 child=self.secondColumn),
         )
-
-
-
-
-    
-    def setup(self): 
         
         
         
@@ -808,9 +1097,14 @@ class gameOverMenu(arcade.View):
 
         self.manager.draw()
 
+        
         arcade.draw_text(text="GAME OVER",start_x=50,start_y=700,font_size=64,align="center",width=700,color=(230, 0, 0))
-        arcade.draw_text(text="Your score was "+str(self.score),start_x=50,start_y=370,font_size=24,align="center",width=700,color=(120,120,250),bold=True)
-
+        
+        if playerCount==1:
+            arcade.draw_text(text="Your score was "+str(self.score1),start_x=50,start_y=370,font_size=24,align="center",width=700,color=(50,50,200),bold=True)
+        else:
+            arcade.draw_text(text="Player1 score was "+str(self.score1),start_x=50,start_y=400,font_size=24,align="center",width=700,color=(50,50,200),bold=True)
+            arcade.draw_text(text="Player2 score was "+str(self.score2),start_x=50,start_y=370,font_size=24,align="center",width=700,color=(50,50,200),bold=True)
 
         arcade.draw_text(text="PAUSE: Esc key",start_x=550,start_y=43,font_size=12)
         arcade.draw_text(text="MOVE: Arrow keys or WASD",start_x=550,start_y=24,font_size=12)
@@ -833,7 +1127,16 @@ class creditsMenu(arcade.View):
 
         self.logo = arcade.load_texture("assets/logo.png")
 
+        self.manager=None
         ## Needed for the buttons
+        
+
+
+
+
+
+    def setup(self): 
+
         self.manager = arcade.gui.UIManager()
         self.manager.enable()
         
@@ -862,12 +1165,6 @@ class creditsMenu(arcade.View):
                 anchor_y="bottom",
                 child=self.v_box),
         )
-
-
-
-
-
-    def setup(self): 
         
         pass
 
@@ -929,6 +1226,8 @@ class scoreMenu(arcade.View):
         
         self.entryFound=False
         self.registeredDifficulty=None
+
+        self.manager=None
 
         
 
@@ -1154,14 +1453,13 @@ class Score:
 def main():
 
 
-
     window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
-    
-    startingView=mainMenu()
-    # gameView=mainGameView()
 
-    window.show_view(mainMenu())
-    startingView.setup()
+    
+    currentView=mainMenu()
+    currentView.setup()
+
+    window.show_view(currentView)
 
     arcade.run()
 
