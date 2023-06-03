@@ -31,6 +31,7 @@ class mainGameView(arcade.View):
 
         self.shapes = arcade.ShapeElementList()
         self.window.set_mouse_visible(False)
+        self.paused = False
 
         color1 = (188, 155, 189)
         color2 = (165, 205, 212)
@@ -162,6 +163,7 @@ class mainGameView(arcade.View):
     
     def on_draw(self):
 
+        
         self.clear()
         self.shapes.draw()
         arcade.draw_lrwh_rectangle_textured(0, -self.backgroundMove,
@@ -239,6 +241,10 @@ class mainGameView(arcade.View):
         if key == arcade.key.LSHIFT or key == arcade.key.RSHIFT:
             self.shift_pressed = True
             self.updatePlayerSpeed()
+        if key == arcade.key.ESCAPE:
+            # pass self, the current view, to preserve this view's state
+            self.paused=not self.paused
+            # self.window.show_view(pause)
         #elif key == arcade.key.SPACE: # spacebeam
             #   
 
@@ -259,246 +265,251 @@ class mainGameView(arcade.View):
             self.shift_pressed = False
             self.updatePlayerSpeed()
 
+       
+
     def on_update(self,delta_time):
         ## movement and game logic in here
-        self.physics_engine.update()
 
-        for coin_engine in self.coin_engines:
-            coin_engine.update()
+        if not self.paused:
+            self.physics_engine.update()
 
-        if(self.backgroundMove<3200-20): ##For a smoother change
-            if(self.coinBoost):
-                self.backgroundMove+=12
+            for coin_engine in self.coin_engines:
+                coin_engine.update()
+
+            if(self.backgroundMove<3200-20): ##For a smoother change
+                if(self.coinBoost):
+                    self.backgroundMove+=12
+                else:
+                    self.backgroundMove+=1
             else:
-                self.backgroundMove+=1
-        else:
-            self.backgroundMove=0
-
-        
-
-        for meteor_engine in self.meteor_engines:
-            meteor_engine.update()
-
-
-
-
-
-        for coin in self.scene["Coins"]:
-          coin.change_y = -PlayerSpeed *2
-
-
-        for meteor in self.scene["Meteors"]:
-           
-            if(self.coinBoost):meteor.change_y = -PlayerSpeed * 5
-            else:meteor.change_y = -PlayerSpeed * 2
-        # for coin in self.scene["Coins"]:
-        #     coin.change_y = -PlayerSpeed
-
-        
-
-        meteorDamage = arcade.check_for_collision_with_list(
-            self.player_sprite, self.scene["Meteors"]
-        )
-
-        for meteor in meteorDamage:
-            meteor.remove_from_sprite_lists()
-            self.PlayerHP = self.PlayerHP - 1
-
-
-        coinCatch = arcade.check_for_collision_with_list(
-            self.player_sprite, self.scene["Coins"]
-        )
-
-        for coin in coinCatch:
-            coin.remove_from_sprite_lists()
-
-            
-            
-            self.coinBoost=True
-
-
-        for chunk in self.scene["OuterWalls"]:
-          meteorDestroy = arcade.check_for_collision_with_list(
-            chunk, self.scene["Meteors"]
-          )
-          for meteor in meteorDestroy:
-              
-              meteor.remove_from_sprite_lists()
-
-        for chunk in self.scene["OuterWalls"]:
-          coinDestroy = arcade.check_for_collision_with_list(
-            chunk, self.scene["Coins"]
-          )
-          for coin in coinDestroy:
-              coin.remove_from_sprite_lists()
-
-        if self.PlayerHP<=0:
-
-
-            mainMenuView = gameOverMenu(self.score)
-            mainMenuView.setup()
-            self.window.show_view(mainMenuView)
-
-
-            scoreFile=open("AstralEscapeScore.txt","a")
-
-            scoreFile.write("\nSTART----------\n\n")
-            scoreFile.write("Difficulty: ")
-            if difficulty==1:
-                scoreFile.write("EASY;\n")
-            elif difficulty==2:
-              scoreFile.write("NORMAL;\n")
-            elif difficulty==3:
-              scoreFile.write("HARD;\n")
-                
-            scoreFile.write("Score: "+str(self.score)+";\n")
-            scoreFile.write("Date: "+str(date.today())+";\n")
-            scoreFile.write("\nEND------------\n")
-
-
+                self.backgroundMove=0
 
             
 
+            for meteor_engine in self.meteor_engines:
+                meteor_engine.update()
 
 
-        self.frameTrack=self.frameTrack+1
-
-        if (self.coinBoost):
-            self.animationBoost=5
-        else:
-            self.animationBoost=10
 
 
-        if (self.frameTrack%self.animationBoost==0):
-            if (self.frameIndex==1):
-                self.frameIndex=0
-            else:
-                self.frameIndex=1
+
+            for coin in self.scene["Coins"]:
+                coin.change_y = -PlayerSpeed *2
 
 
-        seconds=int(self.frameTrack/60)
-
-        if (self.coinBoost and self.frameTrack%6==0):
-            self.score=self.score+1
-        elif(self.frameTrack%30==0):
-            self.score=self.score+1
-
-        if self.coinBoost == False:
-            self.coinSec = seconds
-        
-        if(self.timeTrack!=seconds):
-
-            if (self.timeTrack==self.coinSec+2):
-                self.coinBoost = False
-
-                
+            for meteor in self.scene["Meteors"]:
+            
+                if(self.coinBoost):meteor.change_y = -PlayerSpeed * 5
+                else:meteor.change_y = -PlayerSpeed * 2
+            # for coin in self.scene["Coins"]:
+            #     coin.change_y = -PlayerSpeed
 
             
 
-            self.timeTrack=seconds
-            if (self.timeTrack%5==0):
-                randomNumber=random.randrange(10,790)
+            meteorDamage = arcade.check_for_collision_with_list(
+                self.player_sprite, self.scene["Meteors"]
+            )
 
-                coinScale=random.randrange(100,110)/1000
-                if (difficulty==3):
-                    coinScale=random.randrange(60,110)/1000
+            for meteor in meteorDamage:
+                meteor.remove_from_sprite_lists()
+                self.PlayerHP = self.PlayerHP - 1
 
-                coin=arcade.Sprite("assets/coin.png",0.1)
-                coin.center_x=randomNumber # will need to add some randomness here
-                coin.center_y=SCREEN_HEIGHT
-                coin.change_angle=random.randrange(-2,2)
-                coin.scale=coinScale
-                self.scene.add_sprite("Coins",coin)
 
-                for coin in self.scene["Coins"]:
-                    if coin not in self.existingCoinList:
-                        coin_engine = arcade.PhysicsEngineSimple(
-                            coin, None
-                        )
-                        self.coin_engines.append(coin_engine)
-                        self.existingCoinList.append(coin)
+            coinCatch = arcade.check_for_collision_with_list(
+                self.player_sprite, self.scene["Coins"]
+            )
 
-            elif (self.timeTrack%1==0):
-## 50-50 chance for which meteor to generate
-
+            for coin in coinCatch:
+                coin.remove_from_sprite_lists()
 
                 
                 
-                def meteorSpawn(): 
-                    randomRadial=random.randrange(-5,5)
-                    randomNumber=random.randrange(10,790)
-                    randomScale=random.randrange(100,110)/1000
-
-                    meteorSpawnNum = random.randrange(3)
-
-                    if(meteorSpawnNum==1):
-                        meteor=arcade.Sprite("assets/meteorite01.png",0.1)
-                        meteor.center_x=randomNumber+random.randrange(-200,200) # will need to add some randomness here
-                        meteor.center_y=SCREEN_HEIGHT+random.randrange(20,500)
-                        meteor.change_angle=randomRadial
-                        meteor.scale=randomScale
-                        self.scene.add_sprite("Meteors",meteor)
-                    elif(meteorSpawnNum==2):
-                        meteor2=arcade.Sprite("assets/meteorite02.png",0.1)
-                        meteor2.center_x=randomNumber+random.randrange(-200,200) # will need to add some randomness here
-                        meteor2.center_y=SCREEN_HEIGHT+random.randrange(20,500)
-                        meteor2.change_angle=randomRadial
-                        meteor2.scale=randomScale
+                self.coinBoost=True
 
 
-                        self.scene.add_sprite("Meteors",meteor2)
-                    else:
-                        meteor=arcade.Sprite("assets/meteorite01.png",0.1)
-                        meteor.center_x=randomNumber+random.randrange(-200,200) # will need to add some randomness here
-                        meteor.center_y=SCREEN_HEIGHT+random.randrange(20,500)
-                        meteor.change_angle=randomRadial
-                        meteor.scale=randomScale
+            for chunk in self.scene["OuterWalls"]:
+                meteorDestroy = arcade.check_for_collision_with_list(
+                chunk, self.scene["Meteors"]
+            )
+            for meteor in meteorDestroy:
+                
+                meteor.remove_from_sprite_lists()
+
+            for chunk in self.scene["OuterWalls"]:
+                coinDestroy = arcade.check_for_collision_with_list(
+                chunk, self.scene["Coins"]
+            )
+            for coin in coinDestroy:
+                coin.remove_from_sprite_lists()
+
+            if self.PlayerHP<=0:
 
 
-                        self.scene.add_sprite("Meteors",meteor)
-
-                        meteor2=arcade.Sprite("assets/meteorite02.png",0.1)
-                        meteor2.center_x=randomNumber+random.randrange(-200,200) # will need to add some randomness here
-                        meteor2.center_y=SCREEN_HEIGHT+random.randrange(20,500)
-                        meteor2.change_angle=randomRadial
-                        meteor2.scale=randomScale
+                mainMenuView = gameOverMenu(self.score)
+                mainMenuView.setup()
+                self.window.show_view(mainMenuView)
 
 
-                        self.scene.add_sprite("Meteors",meteor2)
+                scoreFile=open("AstralEscapeScore.txt","a")
 
-                #if difficulty hard
-                if (difficulty==3):
-                    meteorSpawn()
-                    meteorSpawn()
-                    meteorSpawn()
-                    meteorSpawn()
-                    meteorSpawn()
-                    meteorSpawn()
+                scoreFile.write("\nSTART----------\n\n")
+                scoreFile.write("Difficulty: ")
+                if difficulty==1:
+                    scoreFile.write("EASY;\n")
                 elif difficulty==2:
-                    meteorSpawn()
-                    meteorSpawn()
-                    meteorSpawn()
-                elif difficulty==1:
-                    meteorSpawn()
-                
-                
+                    scoreFile.write("NORMAL;\n")
+                elif difficulty==3:
+                    scoreFile.write("HARD;\n")
+                        
+                    scoreFile.write("Score: "+str(self.score)+";\n")
+                    scoreFile.write("Date: "+str(date.today())+";\n")
+                    scoreFile.write("\nEND------------\n")
+
+
 
                 
 
-                
-                
 
-                
-                for meteor in self.scene["Meteors"]:
-                    if meteor not in self.existingMeteorList:
-                        meteor_engine = arcade.PhysicsEngineSimple(
-                            meteor, None
-                        )
-                        self.meteor_engines.append(meteor_engine)
-                        self.existingMeteorList.append(meteor)
 
-                
+            self.frameTrack=self.frameTrack+1
+
+            if (self.coinBoost):
+                self.animationBoost=5
+            else:
+                self.animationBoost=10
+
+
+            if (self.frameTrack%self.animationBoost==0):
+                if (self.frameIndex==1):
+                    self.frameIndex=0
+                else:
+                    self.frameIndex=1
+
+
+            seconds=int(self.frameTrack/60)
+
+            if (self.coinBoost and self.frameTrack%6==0):
+                self.score=self.score+1
+            elif(self.frameTrack%30==0):
+                self.score=self.score+1
+
+            if self.coinBoost == False:
+                self.coinSec = seconds
             
+            if(self.timeTrack!=seconds):
+
+                if (self.timeTrack==self.coinSec+2):
+                    self.coinBoost = False
+
+                    
+
+                
+
+                self.timeTrack=seconds
+                if (self.timeTrack%5==0):
+                    randomNumber=random.randrange(10,790)
+
+                    coinScale=random.randrange(100,110)/1000
+                    if (difficulty==3):
+                        coinScale=random.randrange(60,110)/1000
+
+                    coin=arcade.Sprite("assets/coin.png",0.1)
+                    coin.center_x=randomNumber # will need to add some randomness here
+                    coin.center_y=SCREEN_HEIGHT
+                    coin.change_angle=random.randrange(-2,2)
+                    coin.scale=coinScale
+                    self.scene.add_sprite("Coins",coin)
+
+                    for coin in self.scene["Coins"]:
+                        if coin not in self.existingCoinList:
+                            coin_engine = arcade.PhysicsEngineSimple(
+                                coin, None
+                            )
+                            self.coin_engines.append(coin_engine)
+                            self.existingCoinList.append(coin)
+
+                elif (self.timeTrack%1==0):
+    ## 50-50 chance for which meteor to generate
+
+
+                    
+                    
+                    def meteorSpawn(): 
+                        randomRadial=random.randrange(-5,5)
+                        randomNumber=random.randrange(10,790)
+                        randomScale=random.randrange(100,110)/1000
+
+                        meteorSpawnNum = random.randrange(3)
+
+                        if(meteorSpawnNum==1):
+                            meteor=arcade.Sprite("assets/meteorite01.png",0.1)
+                            meteor.center_x=randomNumber+random.randrange(-200,200) # will need to add some randomness here
+                            meteor.center_y=SCREEN_HEIGHT+random.randrange(20,500)
+                            meteor.change_angle=randomRadial
+                            meteor.scale=randomScale
+                            self.scene.add_sprite("Meteors",meteor)
+                        elif(meteorSpawnNum==2):
+                            meteor2=arcade.Sprite("assets/meteorite02.png",0.1)
+                            meteor2.center_x=randomNumber+random.randrange(-200,200) # will need to add some randomness here
+                            meteor2.center_y=SCREEN_HEIGHT+random.randrange(20,500)
+                            meteor2.change_angle=randomRadial
+                            meteor2.scale=randomScale
+
+
+                            self.scene.add_sprite("Meteors",meteor2)
+                        else:
+                            meteor=arcade.Sprite("assets/meteorite01.png",0.1)
+                            meteor.center_x=randomNumber+random.randrange(-200,200) # will need to add some randomness here
+                            meteor.center_y=SCREEN_HEIGHT+random.randrange(20,500)
+                            meteor.change_angle=randomRadial
+                            meteor.scale=randomScale
+
+
+                            self.scene.add_sprite("Meteors",meteor)
+
+                            meteor2=arcade.Sprite("assets/meteorite02.png",0.1)
+                            meteor2.center_x=randomNumber+random.randrange(-200,200) # will need to add some randomness here
+                            meteor2.center_y=SCREEN_HEIGHT+random.randrange(20,500)
+                            meteor2.change_angle=randomRadial
+                            meteor2.scale=randomScale
+
+
+                            self.scene.add_sprite("Meteors",meteor2)
+
+                    #if difficulty hard
+                    if (difficulty==3):
+                        meteorSpawn()
+                        meteorSpawn()
+                        meteorSpawn()
+                        meteorSpawn()
+                        meteorSpawn()
+                        meteorSpawn()
+                    elif difficulty==2:
+                        meteorSpawn()
+                        meteorSpawn()
+                        meteorSpawn()
+                    elif difficulty==1:
+                        meteorSpawn()
+                    
+                    
+
+                    
+
+                    
+                    
+
+                    
+                    for meteor in self.scene["Meteors"]:
+                        if meteor not in self.existingMeteorList:
+                            meteor_engine = arcade.PhysicsEngineSimple(
+                                meteor, None
+                            )
+                            self.meteor_engines.append(meteor_engine)
+                            self.existingMeteorList.append(meteor)
+
+                    
+            
+
 
 
 class mainMenu(arcade.View):
