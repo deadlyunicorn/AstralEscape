@@ -264,7 +264,7 @@ class mainGameView(arcade.View):
                 self.player_sprite2.alpha=0
                 
                 # self.player_sprite2.texture= arcade.Texture(arcade.load_texture("assets/invisible_wall.png"))
-
+##We did it
         
         if playerCount==2:
             arcade.draw_rectangle_filled(400,750,170,70,(0,0,0,150))
