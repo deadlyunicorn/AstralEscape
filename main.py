@@ -105,31 +105,31 @@ class mainGameView(arcade.View):
 
         # Adding walls
         for chunk in range(0,SCREEN_WIDTH+200,10): #wall is 50x50 1/5 = 0.2 
-            wall =  arcade.Sprite("assets/test_invisible_wall.png",0.2) #file location , Sprite Scaling (1 = 100%)
+            wall =  arcade.Sprite("assets/invisible_wall.png",0.2) #file location , Sprite Scaling (1 = 100%)
             wall.center_x=chunk
             wall.center_y=0
             self.scene.add_sprite("OuterWalls",wall)
 
         for chunk in range(0,SCREEN_WIDTH+10,10): #wall is 50x50 1/5 = 0.2 
-            wall =  arcade.Sprite("assets/test_invisible_wall.png",0.2) #file location , Sprite Scaling (1 = 100%)
+            wall =  arcade.Sprite("assets/invisible_wall.png",0.2) #file location , Sprite Scaling (1 = 100%)
             wall.center_x=chunk
             wall.center_y=wallHeight
             self.scene.add_sprite("Walls",wall)
 
         for chunk in range(0,SCREEN_WIDTH+10,10): #wall is 50x50 1/5 = 0.2 
-            wall =  arcade.Sprite("assets/test_invisible_wall.png",0.2) #file location , Sprite Scaling (1 = 100%)
+            wall =  arcade.Sprite("assets/invisible_wall.png",0.2) #file location , Sprite Scaling (1 = 100%)
             wall.center_x=chunk
             wall.center_y=20
             self.scene.add_sprite("Walls",wall)
 
         for chunk in range(0,int(wallHeight),10): #wall is 50x50 1/5 = 0.2 
-            wall =  arcade.Sprite("assets/test_invisible_wall.png",0.2) #file location , Sprite Scaling (1 = 100%)
+            wall =  arcade.Sprite("assets/invisible_wall.png",0.2) #file location , Sprite Scaling (1 = 100%)
             wall.center_x=20
             wall.center_y=chunk
             self.scene.add_sprite("Walls",wall)
           
         for chunk in range(0,int(wallHeight),10): #wall is 50x50 1/5 = 0.2 
-            wall =  arcade.Sprite("assets/test_invisible_wall.png",0.2) #file location , Sprite Scaling (1 = 100%)
+            wall =  arcade.Sprite("assets/invisible_wall.png",0.2) #file location , Sprite Scaling (1 = 100%)
             wall.center_x=SCREEN_WIDTH-20
             wall.center_y=chunk
             self.scene.add_sprite("Walls",wall)
