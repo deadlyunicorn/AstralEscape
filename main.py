@@ -496,10 +496,15 @@ class mainGameView(arcade.View):
 
 class mainMenu(arcade.View):
 
+
+
     def __init__(self): 
+
+
 
         super().__init__()
 
+        self.window.set_mouse_visible(True)
         
 
         self.scene = None
@@ -744,7 +749,7 @@ class creditsMenu(arcade.View):
 
 
 
-        arcade.draw_text(text="This game was built by Alexandrer Petrache and Nikolaos Filopoulos",start_x=50,start_y=550,font_size=16,align="center",width=700)
+        arcade.draw_text(text="This game was built by Alexander Petrache and Nikolaos Filopoulos",start_x=50,start_y=550,font_size=16,align="center",width=700)
         arcade.draw_text(text="During their 2nd Semester at the Vocational Institute of Peristeri",start_x=50,start_y=520,font_size=16,align="center",width=700)
         arcade.draw_text(text="As a project on the course 'Practical Application' ",start_x=50,start_y=490,font_size=16,align="center",width=700)
         arcade.draw_text(text="We built this using the Python and the library 'Arcade'.",start_x=50,start_y=460,font_size=16,align="center",width=700)
@@ -901,7 +906,6 @@ class scoreMenu(arcade.View):
 
 
         self.clear()
-        print("End reading")
 
 
         arcade.draw_lrwh_rectangle_textured(0, 0,
@@ -914,19 +918,19 @@ class scoreMenu(arcade.View):
 
 
 
-        arcade.draw_text(text="Showing for difficulty: ",start_x=0,start_y=85,font_size=16,align="center",width=700)
+        arcade.draw_text(text="Showing difficulty: ",start_x=0,start_y=85,font_size=16,align="center",width=700)
         ## Button
 
         self.manager.draw()
 
         if self.currentDifficulty==1:
-            arcade.draw_text(text="Easy",start_x=480,start_y=85,font_size=16)
+            arcade.draw_text(text="Easy",start_x=450,start_y=85,font_size=16)
 
             
         elif self.currentDifficulty==2:
-            arcade.draw_text(text="Medium",start_x=480,start_y=85,font_size=16)
+            arcade.draw_text(text="Medium",start_x=450,start_y=85,font_size=16)
         elif self.currentDifficulty==3:
-            arcade.draw_text(text="Hard",start_x=480,start_y=85,font_size=16)
+            arcade.draw_text(text="Hard",start_x=450,start_y=85,font_size=16)
 
         if self.registeredDifficulty!=None:
 
@@ -943,7 +947,6 @@ class scoreMenu(arcade.View):
                         
                         arcade.draw_rectangle_filled(400,660-x*50,700,40,(50,0,120,150))
                         arcade.draw_text(text="#"+str(x+1),start_x=100,start_y=650-x*50,font_size=19)
-                        print(self.easy_sorted[x].score)
                         arcade.draw_text(text=str(self.easy_sorted[x].score),align="right",start_x=220,start_y=650-x*50,font_size=19,width=200)
                         arcade.draw_text(text=str(self.easy_sorted[x].date),start_x=570,start_y=650-x*50,font_size=19)
                 else:
@@ -963,7 +966,6 @@ class scoreMenu(arcade.View):
                         
                         arcade.draw_rectangle_filled(400,660-x*50,700,40,(50,0,120,150))
                         arcade.draw_text(text="#"+str(x+1),start_x=100,start_y=650-x*50,font_size=19)
-                        print(self.normal_sorted[x].score)
                         arcade.draw_text(text=str(self.normal_sorted[x].score),align="right",start_x=220,start_y=650-x*50,font_size=19,width=200)
                         arcade.draw_text(text=str(self.normal_sorted[x].date),start_x=570,start_y=650-x*50,font_size=19)
                 else:
@@ -985,7 +987,6 @@ class scoreMenu(arcade.View):
                         
                         arcade.draw_rectangle_filled(400,660-x*50,700,40,(50,0,120,150))
                         arcade.draw_text(text="#"+str(x+1),start_x=100,start_y=650-x*50,font_size=19)
-                        print(self.hard_sorted[x].score)
                         arcade.draw_text(text=str(self.hard_sorted[x].score),align="right",start_x=220,start_y=650-x*50,font_size=19,width=200)
                         arcade.draw_text(text=str(self.hard_sorted[x].date),start_x=570,start_y=650-x*50,font_size=19)
                 else:
