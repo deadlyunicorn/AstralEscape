@@ -333,6 +333,13 @@ class mainGameView(arcade.View):
               coin.remove_from_sprite_lists()
 
         if self.PlayerHP<=0:
+
+
+            mainMenuView = gameOverMenu(self.score)
+            mainMenuView.setup()
+            self.window.show_view(mainMenuView)
+
+
             scoreFile=open("AstralEscapeScore.txt","a")
 
             scoreFile.write("\nSTART----------\n\n")
@@ -348,9 +355,9 @@ class mainGameView(arcade.View):
             scoreFile.write("Date: "+str(date.today())+";\n")
             scoreFile.write("\nEND------------\n")
 
-            mainMenuView = mainMenu()
-            mainMenuView.setup()
-            self.window.show_view(mainMenuView)
+
+
+            
 
 
 
@@ -651,6 +658,7 @@ class mainMenu(arcade.View):
 
         self.manager.draw()
 
+        arcade.draw_text(text="PAUSE: Esc key",start_x=550,start_y=43,font_size=12)
         arcade.draw_text(text="MOVE: Arrow keys or WASD",start_x=550,start_y=24,font_size=12)
         arcade.draw_text(text="BOOST: SHIFT key",start_x=550,start_y=5,font_size=12)
 
@@ -679,6 +687,125 @@ class mainMenu(arcade.View):
                 self.frameIndex=1
 
 
+class gameOverMenu(arcade.View):
+    def __init__(self,score): 
+
+
+
+        super().__init__()
+
+        self.score=score
+        self.window.set_mouse_visible(True)
+        
+
+        self.scene = None
+        
+        self.background = arcade.load_texture("assets/space.png")
+
+        self.brokenSpaceCraft = arcade.load_texture("assets/spacecraft_destroyed.png")
+
+        ## Needed for the buttons
+        self.manager = arcade.gui.UIManager()
+        self.manager.enable()
+
+
+        self.firstColumn = arcade.gui.UIBoxLayout(vertical=True)
+        self.secondColumn = arcade.gui.UIBoxLayout(vertical=True)
+
+        retryButton = arcade.gui.UIFlatButton(text="Play Again", width=200)
+        self.firstColumn.add(retryButton.with_space_around(bottom=100))
+
+        mainMenuButton = arcade.gui.UIFlatButton(text="Homescreen", width=200)
+        self.firstColumn.add(mainMenuButton.with_space_around(bottom=100))
+    
+        scoreButton = arcade.gui.UIFlatButton(text="Scoreboard", width=200)
+        self.secondColumn.add(scoreButton.with_space_around(bottom=100))
+
+        exitButton = arcade.gui.UIFlatButton(text="Exit", width=200)
+        self.secondColumn.add(exitButton.with_space_around(bottom=100))
+
+
+
+
+        @retryButton.event("on_click")
+        def on_click_settings(event):
+            gameView=mainGameView()
+            gameView.setup()
+            self.window.show_view(gameView)
+
+        @scoreButton.event("on_click")
+        def on_click_settings(event):
+            currentView=scoreMenu()
+            currentView.setup()
+            self.window.show_view(currentView)
+
+        @mainMenuButton.event("on_click")
+        def on_click_settings(event):
+            currentView=mainMenu()
+            currentView.setup()
+            self.window.show_view(currentView)
+
+        @exitButton.event("on_click")
+        def on_click_settings(event):
+            arcade.exit()
+
+  
+        
+
+        # Create a widget to hold the v_box widget, that will center the buttons
+        self.manager.add(
+            arcade.gui.UIAnchorWidget(
+                align_x= 150,
+                align_y= 0,
+                anchor_x="left",
+                anchor_y="bottom",
+                child=self.firstColumn),
+        )
+
+        self.manager.add(
+            arcade.gui.UIAnchorWidget(
+                align_x= -150,
+                align_y= 0,
+                anchor_x="right",
+                anchor_y="bottom",
+                child=self.secondColumn),
+        )
+
+
+
+
+    
+    def setup(self): 
+        
+        
+        
+        pass
+
+    
+    def on_draw(self):
+
+
+
+        self.clear()
+
+        arcade.draw_lrwh_rectangle_textured(0, 0,
+                                            SCREEN_WIDTH, 4000,
+                                            self.background)
+
+
+        arcade.draw_lrwh_rectangle_textured(0,20,800,800,self.brokenSpaceCraft)
+
+        self.manager.draw()
+
+        arcade.draw_text(text="GAME OVER",start_x=50,start_y=700,font_size=64,align="center",width=700,color=(230, 0, 0))
+        arcade.draw_text(text="Your score was "+str(self.score),start_x=50,start_y=370,font_size=24,align="center",width=700,color=(120,120,250),bold=True)
+
+
+        arcade.draw_text(text="PAUSE: Esc key",start_x=550,start_y=43,font_size=12)
+        arcade.draw_text(text="MOVE: Arrow keys or WASD",start_x=550,start_y=24,font_size=12)
+        arcade.draw_text(text="BOOST: SHIFT key",start_x=550,start_y=5,font_size=12)
+
+        
 
 
           
@@ -785,7 +912,7 @@ class scoreMenu(arcade.View):
 
         self.scene = None
 
-        self.currentDifficulty=1
+        self.currentDifficulty=difficulty
         self.background = arcade.load_texture("assets/space.png")
 
         
