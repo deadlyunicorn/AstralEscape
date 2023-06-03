@@ -91,6 +91,8 @@ class mainGameView(arcade.View):
         self.coinDestroy=[]
 
         self.playerCount=playerCount
+
+        self.logo=None
         
 
 
@@ -185,6 +187,8 @@ class mainGameView(arcade.View):
 
         self.heartTexture=arcade.load_texture("assets/heart.png")
         self.heartTexture2=arcade.load_texture("assets/heart2.png")
+        self.logo = arcade.load_texture("assets/logo.png")
+
 
 
         
@@ -199,6 +203,7 @@ class mainGameView(arcade.View):
         arcade.draw_lrwh_rectangle_textured(0, -self.backgroundMove,
                                             SCREEN_WIDTH, 4000,
                                             self.background)
+        
         
         
 
@@ -223,7 +228,7 @@ class mainGameView(arcade.View):
         #6+ seconds after death
         elif(self.playerLastAlive+5<self.frameTrack/60):
             self.player_sprite1.center_x=self.player_sprite2.center_x
-            self.player_sprite1.center_y=self.player_sprite2.center_y-100
+            self.player_sprite1.center_y=self.player_sprite2.center_y-20
             
 
         #recent death < 6sec
@@ -252,7 +257,7 @@ class mainGameView(arcade.View):
             elif(self.playerLastAlive2+5<self.frameTrack/60):
                 self.player_sprite2.texture= arcade.load_texture("assets/invisible_wall.png")
                 self.player_sprite2.center_x=self.player_sprite1.center_x
-                self.player_sprite2.center_y=self.player_sprite1.center_y-100
+                self.player_sprite2.center_y=self.player_sprite1.center_y-20
             else:
                 frame2=arcade.load_texture("assets/spacecraft_destroyed.png")
                 frame2.draw_sized(self.player_sprite2.center_x, self.player_sprite2.center_y, frame2.width*0.2, frame2.height*0.2,alpha=255-(2.45*(self.frameTrack-self.playerLastAlive2*60)/3))
@@ -262,9 +267,11 @@ class mainGameView(arcade.View):
 
         
         if playerCount==2:
+            arcade.draw_rectangle_filled(400,750,170,70,(0,0,0,150))
             arcade.draw_text(("Player 1: "+str(self.score1)),0,750,font_size=14,align="center",width=800)
             arcade.draw_text(("Player 2: "+str(self.score2)),0,730,font_size=14,align="center",width=800)
         else:
+            arcade.draw_rectangle_filled(400,760,170,40,(0,0,0,150))
             arcade.draw_text(("Score is: "+str(self.score1)),0,750,font_size=14,align="center",width=800)
 
 
@@ -282,6 +289,18 @@ class mainGameView(arcade.View):
 
 
         self.scene.draw()
+
+        if self.paused:
+
+            arcade.draw_rectangle_filled(400,400,800,800,(0,0,50,150))
+            arcade.draw_lrwh_rectangle_textured(150,0,800,800,self.logo)
+            arcade.draw_text(text="Game is paused",start_x=50,start_y=520,font_size=16,align="center",width=700)
+            arcade.draw_text(text="END GAME: 'H' key",start_x=550,start_y=61,font_size=12)
+            arcade.draw_text(text="PAUSE: Esc key",start_x=550,start_y=43,font_size=12)
+            arcade.draw_text(text="MOVE: Arrow keys or WASD",start_x=550,start_y=24,font_size=12)
+            arcade.draw_text(text="BOOST: SHIFT key",start_x=550,start_y=5,font_size=12)
+
+
 
         #background
         
@@ -360,7 +379,36 @@ class mainGameView(arcade.View):
                     else:
                         self.player_sprite2.change_x = PlayerSpeed
             
-      
+    def saveGame(self):
+        scoreFile=open("AstralEscapeScore.txt","a")
+
+        scoreFile.write("\nSTART----------\n\n")
+        scoreFile.write("Difficulty: ")
+
+        if difficulty==1:
+            scoreFile.write("EASY;\n")
+        elif difficulty==2:
+            scoreFile.write("NORMAL;\n")
+        elif difficulty==3:
+            scoreFile.write("HARD;\n")
+                
+        scoreFile.write("Score: "+str(self.score1)+";\n")
+        scoreFile.write("Date: "+str(date.today())+";\n")
+        scoreFile.write("\nEND------------\n")
+
+        scoreFile.write("\nSTART----------\n\n")
+        scoreFile.write("Difficulty: ")
+
+        if difficulty==1:
+            scoreFile.write("EASY;\n")
+        elif difficulty==2:
+            scoreFile.write("NORMAL;\n")
+        elif difficulty==3:
+            scoreFile.write("HARD;\n")
+                
+        scoreFile.write("Score: "+str(self.score2)+";\n")
+        scoreFile.write("Date: "+str(date.today())+"(P2)"+";\n")
+        scoreFile.write("\nEND------------\n")
         
 
     def on_key_press(self, key, modifiers):
@@ -413,8 +461,16 @@ class mainGameView(arcade.View):
 
         if key == arcade.key.ESCAPE:
             self.paused=not self.paused
+        if key == arcade.key.H and self.paused:
+            self.saveGame()
+
+            gameOverView = gameOverMenu(self.score1,self.score2)
+            gameOverView.setup()
+            self.window.show_view(gameOverView)
+            
             
 
+    
 
     def on_key_release(self, key, modifiers):
         if (self.playerCount==1):
@@ -614,39 +670,14 @@ class mainGameView(arcade.View):
                     self.window.show_view(gameOverView)
 
                     #save score to file
-                    scoreFile=open("AstralEscapeScore.txt","a")
 
-                    scoreFile.write("\nSTART----------\n\n")
-                    scoreFile.write("Difficulty: ")
-
-                    if difficulty==1:
-                        scoreFile.write("EASY;\n")
-                    elif difficulty==2:
-                        scoreFile.write("NORMAL;\n")
-                    elif difficulty==3:
-                        scoreFile.write("HARD;\n")
-                            
-                    scoreFile.write("Score: "+str(self.score1)+";\n")
-                    scoreFile.write("Date: "+str(date.today())+";\n")
-                    scoreFile.write("\nEND------------\n")
-
-                    scoreFile.write("\nSTART----------\n\n")
-                    scoreFile.write("Difficulty: ")
-
-                    if difficulty==1:
-                        scoreFile.write("EASY;\n")
-                    elif difficulty==2:
-                        scoreFile.write("NORMAL;\n")
-                    elif difficulty==3:
-                        scoreFile.write("HARD;\n")
-                            
-                    scoreFile.write("Score: "+str(self.score2)+";\n")
-                    scoreFile.write("Date: "+str(date.today())+"(P2)"+";\n")
-                    scoreFile.write("\nEND------------\n")
+                    self.saveGame()
+                    
 
 
 
 
+            
 
                 
 
@@ -787,7 +818,6 @@ class mainGameView(arcade.View):
                             )
                             self.meteor_engines.append(meteor_engine)
                             self.existingMeteorList.append(meteor)
-
                     
             
 
@@ -849,6 +879,10 @@ class mainMenu(arcade.View):
         playButton = arcade.gui.UIFlatButton(text="Start Game", width=200)
         self.v_box.add(playButton.with_space_around(bottom=20))
 
+        playerButton = arcade.gui.UIFlatButton(text="Players: ", width=200)
+        self.v_box.add(playerButton.with_space_around(bottom=20))
+
+
         scoreButton = arcade.gui.UIFlatButton(text="Score", width=200)
         self.v_box.add(scoreButton.with_space_around(bottom=20))
 
@@ -864,6 +898,14 @@ class mainMenu(arcade.View):
             gameView=mainGameView()
             gameView.setup()
             self.window.show_view(gameView)
+
+        @playerButton.event("on_click")
+        def on_click_settings(event):
+            global playerCount
+            if playerCount==1:
+                playerCount=2
+            else: playerCount=1
+
 
         @scoreButton.event("on_click")
         def on_click_settings(event):
@@ -918,7 +960,9 @@ class mainMenu(arcade.View):
         
         pass
 
-    
+    def on_hide_view(self):
+        self.manager.disable()
+
     def on_draw(self):
 
 
@@ -934,6 +978,8 @@ class mainMenu(arcade.View):
         frame.draw_sized(630, 380, frame.width*0.8, frame.height*0.8)
 
         arcade.draw_lrwh_rectangle_textured(0,20,800,800,self.logo)
+
+
 
         arcade.draw_text(text="Difficulty",start_x=180,start_y=140,font_size=24,align="left",width=400)
 
@@ -951,6 +997,9 @@ class mainMenu(arcade.View):
         ## Button
 
         self.manager.draw()
+
+        arcade.draw_text(text=str(playerCount),start_x=290,start_y=470,font_size=16,color=(250,250,250))
+
 
         arcade.draw_text(text="PAUSE: Esc key",start_x=550,start_y=43,font_size=12)
         arcade.draw_text(text="MOVE: Arrow keys or WASD",start_x=550,start_y=24,font_size=12)
@@ -1081,6 +1130,8 @@ class gameOverMenu(arcade.View):
         
         pass
 
+    def on_hide_view(self):
+        self.manager.disable()
     
     def on_draw(self):
 
@@ -1100,11 +1151,18 @@ class gameOverMenu(arcade.View):
         
         arcade.draw_text(text="GAME OVER",start_x=50,start_y=700,font_size=64,align="center",width=700,color=(230, 0, 0))
         
+
+
         if playerCount==1:
+
+            arcade.draw_ellipse_filled(400,380,350,100,(0,0,0,200))
             arcade.draw_text(text="Your score was "+str(self.score1),start_x=50,start_y=370,font_size=24,align="center",width=700,color=(50,50,200),bold=True)
         else:
+
+            arcade.draw_ellipse_filled(400,400,400,150,(0,0,0,200))
             arcade.draw_text(text="Player1 score was "+str(self.score1),start_x=50,start_y=400,font_size=24,align="center",width=700,color=(50,50,200),bold=True)
             arcade.draw_text(text="Player2 score was "+str(self.score2),start_x=50,start_y=370,font_size=24,align="center",width=700,color=(50,50,200),bold=True)
+
 
         arcade.draw_text(text="PAUSE: Esc key",start_x=550,start_y=43,font_size=12)
         arcade.draw_text(text="MOVE: Arrow keys or WASD",start_x=550,start_y=24,font_size=12)
@@ -1168,7 +1226,9 @@ class creditsMenu(arcade.View):
         
         pass
 
-    
+    def on_hide_view(self):
+        self.manager.disable()
+
     def on_draw(self):
 
 
@@ -1343,7 +1403,9 @@ class scoreMenu(arcade.View):
         
         pass
 
-    
+    def on_hide_view(self):
+        self.manager.disable()
+
     def on_draw(self):
 
 
