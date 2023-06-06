@@ -1268,12 +1268,12 @@ class gameOverMenu(arcade.View):
         
 
         if playerCount==1:
-            arcade.draw_ellipse_filled(400,380,350,100,(0,0,0,200))
-            arcade.draw_text(text="Your score was "+str(self.score1),start_x=50,start_y=370,font_size=24,align="center",width=700,color=(50,50,200),bold=True)
+            arcade.draw_rectangle_filled(400,380,350,100,(0,0,0,200))
+            arcade.draw_text(text="Your score was "+str(self.score1),start_x=50,start_y=370,font_size=24,align="center",width=700,color=(255,255,255),bold=True)
         else:
-            arcade.draw_ellipse_filled(400,400,400,150,(0,0,0,200))
-            arcade.draw_text(text="Player1 score was "+str(self.score1),start_x=50,start_y=400,font_size=24,align="center",width=700,color=(50,50,200),bold=True)
-            arcade.draw_text(text="Player2 score was "+str(self.score2),start_x=50,start_y=370,font_size=24,align="center",width=700,color=(50,50,200),bold=True)
+            arcade.draw_rectangle_filled(400,400,400,150,(0,0,0,200))
+            arcade.draw_text(text="Player1 score was "+str(self.score1),start_x=50,start_y=400,font_size=24,align="center",width=700,color=(255,255,255),bold=True)
+            arcade.draw_text(text="Player2 score was "+str(self.score2),start_x=50,start_y=370,font_size=24,align="center",width=700,color=(255,255,255),bold=True)
 
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
