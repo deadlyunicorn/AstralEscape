@@ -623,6 +623,9 @@ class mainGameView(arcade.View): #main game class
     def on_update(self,delta_time):
         # movement and game logic in here
 
+        seconds=self.frameTrack//60 #get the current second
+            #1 second == 60 frames
+
         if not self.paused:
 
 
@@ -804,8 +807,7 @@ class mainGameView(arcade.View): #main game class
             #get the frame we are currently at
             self.frameTrack=self.frameTrack+1
 
-            seconds=self.frameTrack//60 #get the current second
-            #1 second == 60 frames
+            
 
 
 
